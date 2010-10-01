@@ -14,16 +14,16 @@ register_openers()
 
 BASE_URI                = 'http://tabasco.upf.edu/api' #TODO:this should be freesound.org
 
-URI_SOUNDS              = '/sounds'
-URI_SOUNDS_SEARCH       = '/sounds/search'
-URI_SOUND               = '/sounds/<sound_id>'
-URI_USERS               = '/people'
-URI_USER                = '/people/<username>'
-URI_USER_SOUNDS         = '/people/<username>/sounds'
-URI_USER_PACKS          = '/people/<username>/packs'
-URI_PACKS               = '/packs'
-URI_PACK                = '/packs/<pack_id>'
-URI_PACK_SOUNDS         = '/packs/<pack_id>/sounds'
+_URI_SOUNDS              = '/sounds'
+_URI_SOUNDS_SEARCH       = '/sounds/search'
+_URI_SOUND               = '/sounds/<sound_id>'
+_URI_USERS               = '/people'
+_URI_USER                = '/people/<username>'
+_URI_USER_SOUNDS         = '/people/<username>/sounds'
+_URI_USER_PACKS          = '/people/<username>/packs'
+_URI_PACKS               = '/packs'
+_URI_PACK                = '/packs/<pack_id>'
+_URI_PACK_SOUNDS         = '/packs/<pack_id>/sounds'
 
 
 def _uri(uri, *args):
@@ -150,7 +150,7 @@ class Sound(FreesoundObject):
 
     @staticmethod
     def get_sound(sound_id):
-        return Sound.get_sound_from_ref(_uri(URI_SOUND, sound_id))
+        return Sound.get_sound_from_ref(_uri(_URI_SOUND, sound_id))
 
     @staticmethod
     def get_sound_from_ref(ref):
@@ -158,7 +158,7 @@ class Sound(FreesoundObject):
 
     @staticmethod
     def search(**params):#q query str, p page num, f filter, s sort
-        return json.loads(_FSReq.simple_get(_uri(URI_SOUNDS_SEARCH),params))
+        return json.loads(_FSReq.simple_get(_uri(_URI_SOUNDS_SEARCH),params))
 
     def retrieve(self, directory, name=False):
        path = os.path.join(directory, name if name else self['original_filename']) 
@@ -177,7 +177,7 @@ class User(FreesoundObject):
 
     @staticmethod
     def get_user(username):
-        return User(json.loads(_FSReq.simple_get(_uri(URI_USER,username))))
+        return User(json.loads(_FSReq.simple_get(_uri(_URI_USER,username))))
 
     def sounds(self):
         return json.loads(_FSReq.simple_get(self['sounds']))
@@ -193,7 +193,7 @@ class Pack(FreesoundObject):
 
     @staticmethod
     def get_pack(pack_id):
-        return Pack(json.loads(_FSReq.simple_get(_uri(URI_PACK,pack_id))))
+        return Pack(json.loads(_FSReq.simple_get(_uri(_URI_PACK,pack_id))))
 
     def sounds(self):
         return json.loads(_FSReq.simple_get(self['sounds']))
