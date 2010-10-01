@@ -123,7 +123,6 @@ class _FSReq(object):
         p['api_key'] = Freesound.get_api_key()
         u = '%s?%s' % (uri, urllib.urlencode(p))
         d = urllib.urlencode(data) if data else None
-        print u
         req = RequestWithMethod(u, method, d)
         try:
             try:
