@@ -123,6 +123,7 @@ class _FSReq(object):
         p['api_key'] = Freesound.get_api_key()
         u = '%s?%s' % (uri, urllib.urlencode(p))
         d = urllib.urlencode(data) if data else None
+        print u
         req = RequestWithMethod(u, method, d)
         try:
             try:
@@ -145,6 +146,38 @@ class _FSReq(object):
     @classmethod
     def retrieve(cls, url, path):
         urllib.urlretrieve('%s?api_key=%s' % (url, Freesound.get_api_key()), path)
+
+class PageException(Exception):
+    pass
+
+class Pager(FreesoundObject):
+
+    @classmethod
+    def _load_page(cls, uri, page):
+        if page < 0:
+            raise PageException('The page argument should be >= 0.')
+        atts = json.loads(_FSReq.simple_get(uri, {'p': page}))
+        atts.update({'p': page,
+                     'p_uri': uri})
+        return Pager(atts)
+
+    def next(self):
+        if not 'next' in self.attributes:
+            raise PageException('No more pages available.')
+        self.__prev_next(1)
+
+    def previous(self):
+        if not 'previous' in self.attributes:
+            raise PageException('You are already at page 1.')
+        self.__prev_next(-1)
+
+    def __prev_next(self, num):
+        new_page = self['p']+num
+	self.attributes={'p':new_page,'p_uri':self['p_uri']}
+        new_attrs= json.loads(_FSReq.simple_get(self.attributes['p_uri'],
+                                             {'p': new_page}))
+        self.attributes.update(new_attrs)
+
 
 class Sound(FreesoundObject):
 
@@ -179,11 +212,11 @@ class User(FreesoundObject):
     def get_user(username):
         return User(json.loads(_FSReq.simple_get(_uri(_URI_USER,username))))
 
-    def sounds(self):
-        return json.loads(_FSReq.simple_get(self['sounds']))
+    def sounds(self,p=1):
+	return Pager._load_page(self['sounds'],p)
     
-    def packs(self):
-        return json.loads(_FSReq.simple_get(self['packs']))
+    def packs(self,p=1):
+	return json.loads(_FSReq.simple_get(self['packs']))
 
     def __repr__(self):
         return '<User: "%s">' % \
@@ -195,8 +228,8 @@ class Pack(FreesoundObject):
     def get_pack(pack_id):
         return Pack(json.loads(_FSReq.simple_get(_uri(_URI_PACK,pack_id))))
 
-    def sounds(self):
-        return json.loads(_FSReq.simple_get(self['sounds']))
+    def sounds(self,p=1):
+	return Pager._load_page(self['sounds'],p)
 
     def __repr__(self):
         return '<Pack:  name="%s">' % \
