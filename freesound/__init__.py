@@ -17,6 +17,8 @@ BASE_URI                = 'http://tabasco.upf.edu/api' #TODO:this should be free
 _URI_SOUNDS              = '/sounds'
 _URI_SOUNDS_SEARCH       = '/sounds/search'
 _URI_SOUND               = '/sounds/<sound_id>'
+_URI_SOUND_ANALYSIS      = '/sounds/<sound_id>/analysis/<filter>' 
+_URI_SOUND_SIMILAR       = '/sounds/<sound_id>/similar' 
 _URI_USERS               = '/people'
 _URI_USER                = '/people/<username>'
 _URI_USER_SOUNDS         = '/people/<username>/sounds'
@@ -102,6 +104,25 @@ class FreesoundObject(object):
         self.__load()
         return self.attributes
 
+class FreesoundException(Exception):
+    def __init__(self, code, info):
+        self.code = code
+        self.explanation = info.get('explanation','')
+        self.type = info.get('type','')
+    def __str__(self):
+        return '<FreesoundException: code=%s, type="%s", explanation="%s">' % \
+                (self.code, self.type, self.explanation)
+
+
+class _FSRetriever(urllib.FancyURLopener):
+    def http_error_default(self, url, fp, errcode, errmsg, headers):
+        resp = fp.read()
+        try:
+            error = json.loads(resp)
+        except:
+            raise Exception(resp)
+        raise FreesoundException(errcode,error)
+
 
 class _FSReq(object):
 
@@ -125,26 +146,20 @@ class _FSReq(object):
         d = urllib.urlencode(data) if data else None
         req = RequestWithMethod(u, method, d)
         try:
-            try:
-                f = urllib2.urlopen(req)
-            except HTTPError, e:
-                if e.code >= 200 and e.code < 300:
-                    resp = e.read()
-                    return resp
-                else:
-                    raise e
-            resp = f.read()
-            f.close()
-            return resp
+            f = urllib2.urlopen(req)
         except HTTPError, e:
-            print '--- request failed ---'
-            print 'code:\t%s' % e.code
-            print 'resp:\n%s' % e.read()
-            raise e
+            resp = e.read()
+            if e.code >= 200 and e.code < 300:
+                return resp
+            else:
+                raise FreesoundException(e.code,json.loads(resp))
+        resp = f.read()
+        f.close()
+        return resp
    
     @classmethod
     def retrieve(cls, url, path):
-        urllib.urlretrieve('%s?api_key=%s' % (url, Freesound.get_api_key()), path)
+        return _FSRetriever().retrieve('%s?api_key=%s' % (url, Freesound.get_api_key()), path)
 
 class PageException(Exception):
     pass
@@ -199,6 +214,60 @@ class Sound(FreesoundObject):
     def retrieve_preview(self, directory, name=False):
        path = os.path.join(directory, name if name else str(self['base_filename_slug']+".mp3")) 
        return _FSReq.retrieve(self['preview'], path)
+
+
+    def get_analysis(self, *filter, **kwargs):
+        '''Retrieve the File's analysis.
+
+        Arguments:
+
+        any argument
+          retrieve a certain part of the analysis tree
+
+        Keyword arguments:
+
+        showall
+          retrieve all available analysis data (default: False)
+
+        Example:
+
+        ::
+
+          file1.get_analysis('lowlevel', 'spectral_centroid', 'mean')
+          file2.get_analysis(showall=True)
+
+        Returns:
+
+        Depending on the filter returns a dictionary, list, number, or string.
+        '''
+        return json.loads(
+                 _FSReq.simple_get(
+                    _uri(_URI_SOUND_ANALYSIS, self['id'], '/'.join(filter)),
+                    params={'all': '1' if kwargs.get('showall', False) else '0'}))
+
+
+    def get_similar(self, preset="lowlevel", num_results=15):
+        '''Search for sounds that are similar to this one
+
+        Arguments:
+
+        preset
+          the similarity search preset to use ('music' or 'lowlevel')
+
+        Keyword arguments:
+
+        num_results
+          the number of results to return
+
+        Returns:
+
+        a dictionary with the search results and number of sounds returned
+        '''
+        uri  = _uri(_URI_SOUND_SIMILAR, self['id'])
+        return json.loads(_FSReq.simple_get(uri,params={'preset':preset, 'num_results':num_results}))
+
+
+
 	
     def __repr__(self):
         return '<Sound: id="%s", name="%s">' % \
