@@ -12,7 +12,7 @@ import os
 # Register the streaming http handlers with urllib2
 register_openers()
 
-BASE_URI                = 'http://tabasco.upf.edu/api' #TODO:this should be freesound.org
+BASE_URI                = 'http://beta.freesound.org/api' #TODO:this should be freesound.org
 
 _URI_SOUNDS              = '/sounds'
 _URI_SOUNDS_SEARCH       = '/sounds/search'
