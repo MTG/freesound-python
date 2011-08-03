@@ -212,8 +212,8 @@ class Sound(FreesoundObject):
        return _FSReq.retrieve(self['serve'], path)
     
     def retrieve_preview(self, directory, name=False):
-       path = os.path.join(directory, name if name else str(self['base_filename_slug']+".mp3")) 
-       return _FSReq.retrieve(self['preview'], path)
+       path = os.path.join(directory, name if name else str(self['preview-hq-mp3'].split("/")[-1])) 
+       return _FSReq.retrieve(self['preview-hq-mp3'], path)
 
 
     def get_analysis(self, *filter, **kwargs):
