@@ -169,10 +169,11 @@ class PageException(Exception):
 class Pager(FreesoundObject):
 
     @classmethod
-    def _load_page(cls, uri, page):
+    def _load_page(cls, uri, page, params={}):
         if page < 0:
             raise PageException('The page argument should be >= 0.')
-        atts = json.loads(_FSReq.simple_get(uri, {'p': page}))
+	params['p']=page
+        atts = json.loads(_FSReq.simple_get(uri, params))
         atts.update({'p': page,
                      'p_uri': uri})
         return Pager(atts)
@@ -207,7 +208,11 @@ class Sound(FreesoundObject):
 
     @staticmethod
     def search(**params):#q query str, p page num, f filter, s sort
-        return json.loads(_FSReq.simple_get(_uri(_URI_SOUNDS_SEARCH),params))
+	p = 1
+	if params.has_key('p'):
+	    p = params['p']
+	    del params['p']
+	return Pager._load_page(_uri(_URI_SOUNDS_SEARCH),p,params)
 
     @staticmethod
     def content_based_search(**params):#t target features, f filter features, p page num, m max results
@@ -297,7 +302,6 @@ class User(FreesoundObject):
 
     def bookmark_category_sounds(self, uri, p=1): # category id can be an id or 'uncategorized'
         return Pager._load_page(uri,p)
-        #return User(json.loads(_FSReq.simple_get(_uri(_URI_BOOKMARK_CATEGORY_SOUNDS, self['username'],category_id))))
 
     def __repr__(self):
         return '<User: "%s">' % \
