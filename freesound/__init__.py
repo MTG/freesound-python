@@ -174,8 +174,8 @@ class Pager(FreesoundObject):
             raise PageException('The page argument should be >= 0.')
 	params['p']=page
         atts = json.loads(_FSReq.simple_get(uri, params))
-        atts.update({'p': page,
-                     'p_uri': uri})
+        atts.update({'p_uri': uri,
+		     'params':params})
         return Pager(atts)
 
     def next(self):
@@ -189,10 +189,10 @@ class Pager(FreesoundObject):
         self.__prev_next(-1)
 
     def __prev_next(self, num):
-        new_page = self['p']+num
-        self.attributes={'p':new_page,'p_uri':self['p_uri']}
+        new_page = self.attributes['params']['p']+num
+	self.attributes['params']['p'] = self.attributes['params']['p']+num
         new_attrs= json.loads(_FSReq.simple_get(self.attributes['p_uri'],
-                                             {'p': new_page}))
+                                             self.attributes['params']))
         self.attributes.update(new_attrs)
 
 
@@ -215,8 +215,12 @@ class Sound(FreesoundObject):
 	return Pager._load_page(_uri(_URI_SOUNDS_SEARCH),p,params)
 
     @staticmethod
-    def content_based_search(**params):#t target features, f filter features, p page num, m max results
-        return json.loads(_FSReq.simple_get(_uri(_URI_SOUNDS_CONTENT_SEARCH),params))
+    def content_based_search(**params):#t target features, f filter features, p page num, m max result
+        p = 1
+        if params.has_key('p'):
+            p = params['p']
+            del params['p']
+	return Pager._load_page(_uri(_URI_SOUNDS_CONTENT_SEARCH),p,params)
 
     @staticmethod
     def geotag(**params):# latitude and longitude delimiters: min_lat, max_lat, min_lon, max_lon
@@ -266,7 +270,10 @@ class Sound(FreesoundObject):
         Arguments:
 
         preset
+        #return json.loads(_FSReq.simple_get(_uri(_URI_SOUNDS_SEARCH),params))
           the similarity search preset to use ('music' or 'lowlevel')
+        #return json.loads(_FSReq.simple_get(_uri(_URI_SOUNDS_SEARCH),params))
+        #return json.loads(_FSReq.simple_get(_uri(_URI_SOUNDS_SEARCH),params))
 
         Keyword arguments:
 
