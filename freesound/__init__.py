@@ -12,20 +12,24 @@ import os
 # Register the streaming http handlers with urllib2
 register_openers()
 
-BASE_URI                = 'http://freesound.org/api'
+BASE_URI                      = 'http://freesound.org/api'
 
-_URI_SOUNDS              = '/sounds'
-_URI_SOUNDS_SEARCH       = '/sounds/search'
-_URI_SOUND               = '/sounds/<sound_id>'
-_URI_SOUND_ANALYSIS      = '/sounds/<sound_id>/analysis/<filter>' 
-_URI_SOUND_SIMILAR       = '/sounds/<sound_id>/similar' 
-_URI_USERS               = '/people'
-_URI_USER                = '/people/<username>'
-_URI_USER_SOUNDS         = '/people/<username>/sounds'
-_URI_USER_PACKS          = '/people/<username>/packs'
-_URI_PACKS               = '/packs'
-_URI_PACK                = '/packs/<pack_id>'
-_URI_PACK_SOUNDS         = '/packs/<pack_id>/sounds'
+_URI_SOUNDS                   = '/sounds'
+_URI_SOUNDS_SEARCH            = '/sounds/search'
+_URI_SOUNDS_CONTENT_SEARCH    = '/sounds/content_search'
+_URI_SOUNDS_GEOTAG            = '/sounds/geotag'
+_URI_SOUND                    = '/sounds/<sound_id>'
+_URI_SOUND_ANALYSIS           = '/sounds/<sound_id>/analysis/<filter>'
+_URI_SOUND_SIMILAR            = '/sounds/<sound_id>/similar'
+_URI_USERS                    = '/people'
+_URI_USER                     = '/people/<username>'
+_URI_USER_SOUNDS              = '/people/<username>/sounds'
+_URI_USER_PACKS               = '/people/<username>/packs'
+_URI_USER_BOOKMARKS           = '/people/<username>/bookmark_categories'
+_URI_BOOKMARK_CATEGORY_SOUNDS = '/people/<username>/bookmark_categories/<category_id>/sounds'
+_URI_PACKS                    = '/packs'
+_URI_PACK                     = '/packs/<pack_id>'
+_URI_PACK_SOUNDS              = '/packs/<pack_id>/sounds'
 
 
 def _uri(uri, *args):
@@ -54,11 +58,9 @@ class RequestWithMethod(urllib2.Request):
 
     N.B. Taken from http://www.abhinandh.com/posts/making-a-http-delete-request-with-urllib2/
     '''
-    def __init__(self, url, method, data=None, headers={},\
-                 origin_req_host=None, unverifiable=False):
+    def __init__(self, url, method, data=None, headers={},origin_req_host=None, unverifiable=False):
         self._method = method
-        urllib2.Request.__init__(self, url, data, headers,\
-                                 origin_req_host, unverifiable)
+        urllib2.Request.__init__(self, url, data, headers,origin_req_host, unverifiable)
 
     def get_method(self):
         if self._method:
@@ -156,7 +158,7 @@ class _FSReq(object):
         resp = f.read()
         f.close()
         return resp
-   
+
     @classmethod
     def retrieve(cls, url, path):
         return _FSRetriever().retrieve('%s?api_key=%s' % (url, Freesound.get_api_key()), path)
@@ -187,7 +189,7 @@ class Pager(FreesoundObject):
 
     def __prev_next(self, num):
         new_page = self['p']+num
-	self.attributes={'p':new_page,'p_uri':self['p_uri']}
+        self.attributes={'p':new_page,'p_uri':self['p_uri']}
         new_attrs= json.loads(_FSReq.simple_get(self.attributes['p_uri'],
                                              {'p': new_page}))
         self.attributes.update(new_attrs)
@@ -207,14 +209,21 @@ class Sound(FreesoundObject):
     def search(**params):#q query str, p page num, f filter, s sort
         return json.loads(_FSReq.simple_get(_uri(_URI_SOUNDS_SEARCH),params))
 
+    @staticmethod
+    def content_based_search(**params):#t target features, f filter features, p page num, m max results
+        return json.loads(_FSReq.simple_get(_uri(_URI_SOUNDS_CONTENT_SEARCH),params))
+
+    @staticmethod
+    def geotag(**params):# latitude and longitude delimiters: min_lat, max_lat, min_lon, max_lon
+        return json.loads(_FSReq.simple_get(_uri(_URI_SOUNDS_GEOTAG),params))
+
     def retrieve(self, directory, name=False):
-       path = os.path.join(directory, name if name else self['original_filename']) 
-       return _FSReq.retrieve(self['serve'], path)
+        path = os.path.join(directory, name if name else self['original_filename'])
+        return _FSReq.retrieve(self['serve'], path)
     
     def retrieve_preview(self, directory, name=False):
-       path = os.path.join(directory, name if name else str(self['preview-hq-mp3'].split("/")[-1])) 
-       return _FSReq.retrieve(self['preview-hq-mp3'], path)
-
+        path = os.path.join(directory, name if name else str(self['preview-hq-mp3'].split("/")[-1]))
+        return _FSReq.retrieve(self['preview-hq-mp3'], path)
 
     def get_analysis(self, *filter, **kwargs):
         '''Retrieve the File's analysis.
@@ -266,9 +275,6 @@ class Sound(FreesoundObject):
         uri  = _uri(_URI_SOUND_SIMILAR, self['id'])
         return json.loads(_FSReq.simple_get(uri,params={'preset':preset, 'num_results':num_results}))
 
-
-
-	
     def __repr__(self):
         return '<Sound: id="%s", name="%s">' % \
                 (self['id'], self.get('original_filename','n.a.'))
@@ -281,10 +287,17 @@ class User(FreesoundObject):
         return User(json.loads(_FSReq.simple_get(_uri(_URI_USER,username))))
 
     def sounds(self,p=1):
-	return Pager._load_page(self['sounds'],p)
+        return Pager._load_page(self['sounds'],p)
     
-    def packs(self,p=1):
-	return json.loads(_FSReq.simple_get(self['packs']))
+    def packs(self):
+        return json.loads(_FSReq.simple_get(self['packs']))
+
+    def bookmark_categories(self):
+        return json.loads(_FSReq.simple_get(self['bookmark_categories']))
+
+    def bookmark_category_sounds(self, uri, p=1): # category id can be an id or 'uncategorized'
+        return Pager._load_page(uri,p)
+        #return User(json.loads(_FSReq.simple_get(_uri(_URI_BOOKMARK_CATEGORY_SOUNDS, self['username'],category_id))))
 
     def __repr__(self):
         return '<User: "%s">' % \
@@ -297,7 +310,7 @@ class Pack(FreesoundObject):
         return Pack(json.loads(_FSReq.simple_get(_uri(_URI_PACK,pack_id))))
 
     def sounds(self,p=1):
-	return Pager._load_page(self['sounds'],p)
+        return Pager._load_page(self['sounds'],p)
 
     def __repr__(self):
         return '<Pack:  name="%s">' % \
