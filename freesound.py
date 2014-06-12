@@ -142,14 +142,14 @@ class FSRequest:
         return result
 
     @classmethod
-    def retrieve(cls, url, path):
+    def retrieve(cls, url, client,path):
         r = Retriever()
         r.addheader('Authorization', client.header)        
         return r.retrieve(url, path)
 
 class Pager(FreesoundObject):
     def __getitem__(self, key):
-        return Sound(self.results[key],None)
+        return Sound(self.results[key],self.client)
 
     def next_page(self):
         return Pager(FSRequest.request(self.next, self.client), self.client)
@@ -169,11 +169,11 @@ class Sound(FreesoundObject):
     def retrieve(self, directory, name=False):
         path = os.path.join(directory, name if name else self.name)
         uri = URIS.uri(URIS.DOWNLOAD, self.id)
-        return FSRequest.retrieve(uri, path)
+        return FSRequest.retrieve(uri, self.client,path)
     
     def retrieve_preview(self, directory, name=False):
         path = os.path.join(directory, name if name else str(self.previews.preview_lq_mp3.split("/")[-1]))
-        return FSRequest.retrieve(self.previews.preview_lq_mp3, path)
+        return FSRequest.retrieve(self.previews.preview_lq_mp3, self.client,path)
 
     def get_analysis(self, descriptors=None):
         uri = URIS.uri(URIS.SOUND_ANALYSIS,self.id)
