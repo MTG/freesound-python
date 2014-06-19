@@ -32,7 +32,7 @@ print "\n"
 # Search Example
 print "Searching for 'violoncello':"
 print "----------------------------"
-results_pager = c.text_search(query="violoncello",filter="tag:tenuto duration:[1.0 TO 15.0]",sort="rating_desc",fields="id,name,previews")
+results_pager = c.text_search(query="violoncello",filter="tag:tenuto duration:[1.0 TO 15.0]",sort="rating_desc",fields="id,name,previews,username")
 print "Num results: " + str(results_pager.count)
 print "\t ----- PAGE 1 -----"
 for i in range(0, len(results_pager.results)):

@@ -56,27 +56,29 @@ class FreesoundClient():
     
     def get_sound(self, sound_id):
         uri = URIS.uri(URIS.SOUND,sound_id)        
-        return Sound(FSRequest.request(uri,self),self)
+        return FSRequest.request(uri, {}, self, Sound)
 
     def text_search(self, **params):
         uri = URIS.uri(URIS.TEXT_SEARCH)
-        return Pager(FSRequest.request(uri,self,params),self)
+        return FSRequest.request(uri, params, self, Pager)
 
     def content_based_search(self, **params):
         uri = URIS.uri(URIS.CONTENT_SEARCH)
-        return Pager(FSRequest.request(uri,self,params),self)
+        return FSRequest.request(uri, params, self, Pager)
         
     def combined_search(self, **params):
         uri = URIS.uri(URIS.COMBINED_SEARCH)
-        return CombinedSearchPager(FSRequest.request(uri,self,params),self)
+        return FSRequest.request(uri,params,self,CombinedSearchPager)
     
     def get_user(self,username):
         uri = URIS.uri(URIS.USER, username)
-        return User(FSRequest.request(uri,self),self)
+        return FSRequest.request(uri,{},self,User)
 
     def get_pack(self,pack_id):
         uri = URIS.uri(URIS.PACK, pack_id)
-        return Pack(FSRequest.request(uri,self),self)
+        return FSRequest.request(uri,{},self,Pack)
+    
+    
     
     def set_token(self, token, auth_type="token"):
         self.token = token#TODO        
@@ -118,7 +120,7 @@ class Retriever(FancyURLopener):
             
 class FSRequest:
     @classmethod
-    def request(cls, uri, client, params={}, data=False):
+    def request(cls, uri, params={}, client=None, wrapper=FreesoundObject, method='GET',data=False):
         p = params if params else {}
         url = '%s?%s' % (uri, urlencode(p)) if params else uri
         d = urllib.urlencode(data) if data else None
@@ -138,7 +140,9 @@ class FSRequest:
         try:
             result = json.loads(resp)
         except:
-            raise FreesoundException(0,"Could'nt parse response")
+            raise FreesoundException(0,"Couldn't parse response")
+        if wrapper:
+            return wrapper(result,client)
         return result
 
     @classmethod
@@ -152,17 +156,17 @@ class Pager(FreesoundObject):
         return Sound(self.results[key],self.client)
 
     def next_page(self):
-        return Pager(FSRequest.request(self.next, self.client), self.client)
+        return FSRequest.request(self.next, {}, self.client, Pager)
 
     def previous_page(self):
-        return Pager(FSRequest.request(self.previous, self.client), self.client)
+        return FSRequest.request(self.previous, {}, self.client, Pager)
 
 class CombinedSearchPager(FreesoundObject):
     def __getitem__(self, key):
-        return Sound(self.results[key],None)
+        return Sound(self.results[key], None)
 
     def more(self):
-        return CombinedSearchPager(FSRequest.request(self.more, self.client))
+        return FSRequest.request(self.more, {}, self.client, CombinedSearchPager)
 
 class Sound(FreesoundObject):
         
@@ -180,16 +184,15 @@ class Sound(FreesoundObject):
         params = {}
         if descriptors:
             params['descriptors']=descriptors
-        return FreesoundObject(FSRequest.request(uri, self.client),self.client,)
+        return FSRequest.request(uri, params,self.client,FreesoundObject)
 
     def get_similar(self):
         uri = URIS.uri(URIS.SIMILAR_SOUNDS,self.id)
-        return Pager(FSRequest.request(uri, self.client),self.client)
+        return FSRequest.request(uri, {},self.client, Pager)
 
     def get_comments(self):
         uri = URIS.uri(URIS.COMMENTS,self.id)
-        return Pager(FSRequest.request(uri, self.client),self.client)
-
+        return FSRequest.request(uri, {}, self.client, Pager)
 
     def __repr__(self):
         return '<Sound: id="%s", name="%s">' % \
@@ -199,19 +202,19 @@ class User(FreesoundObject):
 
     def get_sounds(self):
         uri = URIS.uri(URIS.USER_SOUNDS,self.username)
-        return Pager(FSRequest.request(uri, self.client),self.client)    
+        return FSRequest.request(uri, {}, self.client, Pager)    
     
     def get_packs(self):
         uri = URIS.uri(URIS.USER_PACKS,self.username)
-        return Pager(FSRequest.request(uri, self.client),self.client)    
+        return FSRequest.request(uri, {}, self.client, Pager)    
 
     def get_bookmark_categories(self):
         uri = URIS.uri(URIS.USER_BOOKMARK_CATEGORIES,self.username)
-        return Pager(FSRequest.request(uri, self.client),self.client)    
+        return FSRequest.request(uri, {}, self.client, Pager)    
 
     def get_bookmark_category_sounds(self): 
         uri = URIS.uri(URIS.USER_BOOKMARK_CATEGORY_SOUNDS,self.username)
-        return Pager(FSRequest.request(uri, self.client),self.client)    
+        return FSRequest.request(uri, {}, self.client, Pager)    
 
     def __repr__(self): return '<User: "%s">' % ( self.username)
 
@@ -219,7 +222,7 @@ class Pack(FreesoundObject):
 
     def get_sounds(self):
         uri = URIS.uri(URIS.PACK_SOUNDS,self.id)
-        return Pager(FSRequest.request(uri, self.client),self.client)
+        return FSRequest.request(uri, {}, self.client, Pager)
     
     def __repr__(self):
         return '<Pack:  name="%s">' % \
