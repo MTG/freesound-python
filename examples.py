@@ -1,6 +1,6 @@
 import freesound
 c = freesound.FreesoundClient()
-c.set_token("36e286ba563287f86eed608c13cacd520ced010e","token")
+c.set_token("<YOUR_API_KEY_HERE>","token")
 
 # Get sound info example
 print "Sound info:"
@@ -32,7 +32,7 @@ print "\n"
 # Search Example
 print "Searching for 'violoncello':"
 print "----------------------------"
-results_pager = c.text_search(query="violoncello",filter="tag:tenuto duration:[1.0 TO 15.0]",sort="rating_desc")
+results_pager = c.text_search(query="violoncello",filter="tag:tenuto duration:[1.0 TO 15.0]",sort="rating_desc",fields="id,name,previews")
 print "Num results: " + str(results_pager.count)
 print "\t ----- PAGE 1 -----"
 for i in range(0, len(results_pager.results)):
@@ -44,6 +44,7 @@ for i in range(0, len(results_pager.results)):
     sound = results_pager[i]
     print "\t- " + sound.name + " by " + sound.username
 print "\n"
+results_pager[0].retrieve_preview('.')
 
 # Content based search example
 print "Content based search:"
