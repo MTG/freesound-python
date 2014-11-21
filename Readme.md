@@ -15,7 +15,7 @@ Example usage:
 import freesound, sys,os
 
 c = freesound.FreesoundClient()
-c.set_token("<your_api_key","token")
+c.set_token("<your_api_key>","token")
 
 results = c.text_search(query="dubstep",fields="id,name,previews")
 
