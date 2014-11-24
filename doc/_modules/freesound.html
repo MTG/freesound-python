@@ -1,0 +1,491 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>freesound &mdash; freesound.py 2.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="freesound.py 2.0 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">freesound.py 2.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for freesound</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">A python client for the Freesound API.</span>
+
+<span class="sd">Find the API documentation at http://www.freesound.org/docs/api/. </span>
+
+<span class="sd">Apply for an API key at http://www.freesound.org/api/apply/.</span>
+
+<span class="sd">The client automatically maps function arguments to http parameters of the API. JSON results are converted to python objects. The main object types (Sound, User, Pack) are augmented with the corresponding API calls.</span>
+
+<span class="sd">Note that POST resources are not supported. Downloading full quality sounds requires Oauth2 authentication (see http://freesound.org/docs/api/authentication.html). Oauth2 authentication is supported, but you are expected to implement the workflow.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">re</span><span class="o">,</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">namedtuple</span>
+
+<span class="k">try</span><span class="p">:</span> <span class="c">#python 3</span>
+    <span class="kn">from</span> <span class="nn">urllib.request</span> <span class="kn">import</span> <span class="n">urlopen</span><span class="p">,</span> <span class="n">FancyUrlOpener</span><span class="p">,</span> <span class="n">Request</span>
+    <span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">urlparse</span><span class="p">,</span> <span class="n">urlencode</span><span class="p">,</span> <span class="n">quote</span>
+    <span class="kn">from</span> <span class="nn">urllib.error</span> <span class="kn">import</span> <span class="n">HTTPError</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span> <span class="c">#python 2.7</span>
+    <span class="kn">from</span> <span class="nn">urlparse</span> <span class="kn">import</span> <span class="n">urlparse</span>
+    <span class="kn">from</span> <span class="nn">urllib</span> <span class="kn">import</span> <span class="n">urlencode</span><span class="p">,</span> <span class="n">FancyURLopener</span><span class="p">,</span> <span class="n">quote</span>
+    <span class="kn">from</span> <span class="nn">urllib2</span> <span class="kn">import</span> <span class="n">HTTPError</span><span class="p">,</span> <span class="n">urlopen</span><span class="p">,</span> <span class="n">Request</span>
+
+<span class="k">class</span> <span class="nc">URIS</span><span class="p">():</span>
+    <span class="n">HOST</span> <span class="o">=</span> <span class="s">&#39;www.freesound.org&#39;</span>
+    <span class="n">BASE</span> <span class="o">=</span>  <span class="s">&#39;https://&#39;</span><span class="o">+</span><span class="n">HOST</span><span class="o">+</span><span class="s">&#39;/apiv2&#39;</span>
+    <span class="n">TEXT_SEARCH</span> <span class="o">=</span> <span class="s">&#39;/search/text/&#39;</span>
+    <span class="n">CONTENT_SEARCH</span><span class="o">=</span> <span class="s">&#39;/search/content/&#39;</span>
+    <span class="n">COMBINED_SEARCH</span> <span class="o">=</span> <span class="s">&#39;/search/combined/&#39;</span>
+    <span class="n">SOUND</span> <span class="o">=</span> <span class="s">&#39;/sounds/&lt;sound_id&gt;/&#39;</span>
+    <span class="n">SOUND_ANALYSIS</span> <span class="o">=</span> <span class="s">&#39;/sounds/&lt;sound_id&gt;/analysis/&#39;</span>
+    <span class="n">SIMILAR_SOUNDS</span> <span class="o">=</span> <span class="s">&#39;/sounds/&lt;sound_id&gt;/similar/&#39;</span>
+    <span class="n">COMMENTS</span> <span class="o">=</span> <span class="s">&#39;/sounds/&lt;sound_id&gt;/comments/&#39;</span>
+    <span class="n">DOWNLOAD</span> <span class="o">=</span> <span class="s">&#39;/sounds/&lt;sound_id&gt;/download/&#39;</span>
+    <span class="n">UPLOAD</span> <span class="o">=</span> <span class="s">&#39;/sounds/upload/&#39;</span>
+    <span class="n">DESCRIBE</span> <span class="o">=</span> <span class="s">&#39;/sounds/&lt;sound_id&gt;/describe/&#39;</span>
+    <span class="n">PENDING</span> <span class="o">=</span> <span class="s">&#39;/sounds/pending_uploads/&#39;</span>
+    <span class="n">BOOKMARK</span> <span class="o">=</span> <span class="s">&#39;/sounds/&lt;sound_id&gt;/bookmark/&#39;</span>
+    <span class="n">RATE</span> <span class="o">=</span> <span class="s">&#39;/sounds/&lt;sound_id&gt;/rate/&#39;</span>
+    <span class="n">COMMENT</span> <span class="o">=</span> <span class="s">&#39;/sounds/&lt;sound_id&gt;/comment/&#39;</span>
+    <span class="n">AUTHORIZE</span> <span class="o">=</span> <span class="s">&#39;/oauth2/authorize/&#39;</span>
+    <span class="n">LOGOUT</span> <span class="o">=</span> <span class="s">&#39;/api-auth/logout/&#39;</span>
+    <span class="n">LOGOUT_AUTHORIZE</span> <span class="o">=</span> <span class="s">&#39;/oauth2/logout_and_authorize/&#39;</span>
+    <span class="n">ME</span> <span class="o">=</span> <span class="s">&#39;/me/&#39;</span>
+    <span class="n">USER</span> <span class="o">=</span> <span class="s">&#39;/users/&lt;username&gt;/&#39;</span>
+    <span class="n">USER_SOUNDS</span> <span class="o">=</span> <span class="s">&#39;/users/&lt;username&gt;/sounds/&#39;</span>
+    <span class="n">USER_PACKS</span> <span class="o">=</span> <span class="s">&#39;/users/&lt;username&gt;/packs/&#39;</span>
+    <span class="n">USER_BOOKMARK_CATEGORIES</span> <span class="o">=</span> <span class="s">&#39;/users/&lt;username&gt;/bookmark_categories/&#39;</span>
+    <span class="n">USER_BOOKMARK_CATEGORY_SOUNDS</span> <span class="o">=</span> <span class="s">&#39;/users/&lt;username&gt;/bookmark_categories/&lt;category_id&gt;/sounds/&#39;</span>
+    <span class="n">PACK</span> <span class="o">=</span> <span class="s">&#39;/packs/&lt;pack_id&gt;/&#39;</span>
+    <span class="n">PACK_SOUNDS</span> <span class="o">=</span> <span class="s">&#39;/packs/&lt;pack_id&gt;/sounds/&#39;</span>
+    <span class="n">PACK_DOWNLOAD</span> <span class="o">=</span> <span class="s">&#39;/packs/&lt;pack_id&gt;/download/&#39;</span>
+
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">uri</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="n">uri</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;&lt;[\w_]+&gt;&#39;</span><span class="p">,</span> <span class="n">quote</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">a</span><span class="p">)),</span> <span class="n">uri</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">BASE</span><span class="o">+</span><span class="n">uri</span>
+
+<div class="viewcode-block" id="FreesoundClient"><a class="viewcode-back" href="../index.html#freesound.FreesoundClient">[docs]</a><span class="k">class</span> <span class="nc">FreesoundClient</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    Start here, create a FreesoundClient and set an authentication token using set_token</span>
+
+<span class="sd">    &gt;&gt;&gt; c = FreesoundClient()</span>
+
+<span class="sd">    &gt;&gt;&gt; c.set_token(&quot;&lt;your_api_key&gt;&quot;)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">client_secret</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+    <span class="n">client_id</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+    <span class="n">token</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+    <span class="n">header</span> <span class="o">=</span><span class="s">&quot;&quot;</span>
+
+<div class="viewcode-block" id="FreesoundClient.get_sound"><a class="viewcode-back" href="../index.html#freesound.FreesoundClient.get_sound">[docs]</a>    <span class="k">def</span> <span class="nf">get_sound</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sound_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a sound object by id</span>
+<span class="sd">        http://freesound.org/docs/api/resources_apiv2.html#sound-resources</span>
+
+<span class="sd">        &gt;&gt;&gt; sound = c.get_sound(6) </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">uri</span> <span class="o">=</span> <span class="n">URIS</span><span class="o">.</span><span class="n">uri</span><span class="p">(</span><span class="n">URIS</span><span class="o">.</span><span class="n">SOUND</span><span class="p">,</span><span class="n">sound_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">FSRequest</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="p">{},</span> <span class="bp">self</span><span class="p">,</span> <span class="n">Sound</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="FreesoundClient.text_search"><a class="viewcode-back" href="../index.html#freesound.FreesoundClient.text_search">[docs]</a>    <span class="k">def</span> <span class="nf">text_search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Search sounds using a text query and/or filter. Returns an iterable Pager object.</span>
+<span class="sd">        The fields parameter allows you to specify the information you want in the results list</span>
+<span class="sd">        http://freesound.org/docs/api/resources_apiv2.html#text-search</span>
+
+<span class="sd">        &gt;&gt;&gt; sounds = c.text_search(query=&quot;dubstep&quot;, filter=&quot;tag:loop&quot;, fields=&quot;id,name,url&quot;) </span>
+<span class="sd">        &gt;&gt;&gt; for snd in sounds: print snd.name </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">uri</span> <span class="o">=</span> <span class="n">URIS</span><span class="o">.</span><span class="n">uri</span><span class="p">(</span><span class="n">URIS</span><span class="o">.</span><span class="n">TEXT_SEARCH</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">FSRequest</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">Pager</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="FreesoundClient.content_based_search"><a class="viewcode-back" href="../index.html#freesound.FreesoundClient.content_based_search">[docs]</a>    <span class="k">def</span> <span class="nf">content_based_search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Search sounds using a content-based descriptor target and/or filter</span>
+<span class="sd">        See essentia_example.py for an example using essentia</span>
+<span class="sd">        http://freesound.org/docs/api/resources_apiv2.html#content-search</span>
+
+<span class="sd">        &gt;&gt;&gt; sounds = c.content_based_search(target=&quot;lowlevel.pitch.mean:220&quot;,descriptors_filter=&quot;lowlevel.pitch_instantaneous_confidence.mean:[0.8 TO 1]&quot;,fields=&quot;id,name,url&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; for snd in sounds: print snd.name </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">uri</span> <span class="o">=</span> <span class="n">URIS</span><span class="o">.</span><span class="n">uri</span><span class="p">(</span><span class="n">URIS</span><span class="o">.</span><span class="n">CONTENT_SEARCH</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">FSRequest</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">Pager</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="FreesoundClient.combined_search"><a class="viewcode-back" href="../index.html#freesound.FreesoundClient.combined_search">[docs]</a>    <span class="k">def</span> <span class="nf">combined_search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Combine both text and content-based queries.</span>
+<span class="sd">        http://freesound.org/docs/api/resources_apiv2.html#combined-search</span>
+
+<span class="sd">        &gt;&gt;&gt; sounds = c.combined_search(target=&quot;lowlevel.pitch.mean:220&quot;, filter=&quot;single-note&quot;)  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">uri</span> <span class="o">=</span> <span class="n">URIS</span><span class="o">.</span><span class="n">uri</span><span class="p">(</span><span class="n">URIS</span><span class="o">.</span><span class="n">COMBINED_SEARCH</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">FSRequest</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span><span class="n">params</span><span class="p">,</span><span class="bp">self</span><span class="p">,</span><span class="n">CombinedSearchPager</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="FreesoundClient.get_user"><a class="viewcode-back" href="../index.html#freesound.FreesoundClient.get_user">[docs]</a>    <span class="k">def</span> <span class="nf">get_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">username</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a user object by username</span>
+<span class="sd">        http://freesound.org/docs/api/resources_apiv2.html#combined-search</span>
+
+<span class="sd">        &gt;&gt;&gt; u=c.get_user(&quot;xserra&quot;)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">uri</span> <span class="o">=</span> <span class="n">URIS</span><span class="o">.</span><span class="n">uri</span><span class="p">(</span><span class="n">URIS</span><span class="o">.</span><span class="n">USER</span><span class="p">,</span> <span class="n">username</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">FSRequest</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">uri</span><span class="p">,{},</span><span class="bp">self</span><span class="p">,</span><span class="n">User</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="FreesoundClient.get_pack"><a class="viewcode-back" href="../index.html#freesound.FreesoundClient.get_pack">[docs]</a>    <span class="k">def</span> <span class="nf">get_pack</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">pack_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a user object by username</span>
+<span class="sd">        http://freesound.org/docs/api/resources_apiv2.html#combined-search</span>
+
+<span class="sd">        &gt;&gt;&gt; p = c.get_pack(3416)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">uri</span> <span class="o">=</span> <span class="n">URIS</span><span class="o">.</span><span class="n">uri</span><span class="p">(</span><span class="n">URIS</span><span class="o">.</span><span class="n">PACK</span><span class="p">,</span> <span class="n">pack_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">FSRequest</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">uri</span><span class="p">,{},</span><span class="bp">self</span><span class="p">,</span><span class="n">Pack</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="FreesoundClient.set_token"><a class="viewcode-back" href="../index.html#freesound.FreesoundClient.set_token">[docs]</a>    <span class="k">def</span> <span class="nf">set_token</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">token</span><span class="p">,</span> <span class="n">auth_type</span><span class="o">=</span><span class="s">&quot;token&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set your API key or Oauth2 token</span>
+<span class="sd">        http://freesound.org/docs/api/authentication.html</span>
+<span class="sd">        http://freesound.org/docs/api/resources_apiv2.html#combined-search</span>
+
+<span class="sd">        &gt;&gt;&gt; c.set_token(&quot;&lt;your_api_key&gt;&quot;)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">token</span> <span class="o">=</span> <span class="n">token</span><span class="c">#TODO</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">header</span> <span class="o">=</span> <span class="s">&#39;Bearer &#39;</span><span class="o">+</span><span class="n">token</span> <span class="k">if</span> <span class="n">auth_type</span><span class="o">==</span><span class="s">&#39;oauth&#39;</span> <span class="k">else</span> <span class="s">&#39;Token &#39;</span><span class="o">+</span><span class="n">token</span>
+
+</div></div>
+<div class="viewcode-block" id="FreesoundObject"><a class="viewcode-back" href="../index.html#freesound.FreesoundObject">[docs]</a><span class="k">class</span> <span class="nc">FreesoundObject</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base object, automatically populated from parsed json dictionary</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">json_dict</span><span class="p">,</span> <span class="n">client</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">=</span><span class="n">client</span>
+        <span class="k">def</span> <span class="nf">replace_dashes</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="s">&quot;-&quot;</span> <span class="ow">in</span> <span class="n">k</span><span class="p">:</span>
+                    <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;-&quot;</span><span class="p">,</span><span class="s">&quot;_&quot;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                    <span class="k">del</span> <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span><span class="n">replace_dashes</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+        <span class="n">replace_dashes</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">json_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">FreesoundObject</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="FreesoundException"><a class="viewcode-back" href="../index.html#freesound.FreesoundException">[docs]</a><span class="k">class</span> <span class="nc">FreesoundException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Freesound API exception</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">http_code</span><span class="p">,</span> <span class="n">detail</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">code</span> <span class="o">=</span> <span class="n">http_code</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detail</span> <span class="o">=</span> <span class="n">detail</span>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;&lt;FreesoundException: code=</span><span class="si">%s</span><span class="s">, detail=&quot;</span><span class="si">%s</span><span class="s">&quot;&gt;&#39;</span> <span class="o">%</span> \
+                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">detail</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Retriever"><a class="viewcode-back" href="../index.html#freesound.Retriever">[docs]</a><span class="k">class</span> <span class="nc">Retriever</span><span class="p">(</span><span class="n">FancyURLopener</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Downloads previews and original sound files to disk.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">http_error_default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="n">errcode</span><span class="p">,</span> <span class="n">errmsg</span><span class="p">,</span> <span class="n">headers</span><span class="p">):</span>
+        <span class="n">resp</span> <span class="o">=</span> <span class="n">fp</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">FreesoundException</span><span class="p">(</span><span class="n">errcode</span><span class="p">,</span><span class="n">resp</span><span class="o">.</span><span class="n">detail</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="FSRequest"><a class="viewcode-back" href="../index.html#freesound.FSRequest">[docs]</a><span class="k">class</span> <span class="nc">FSRequest</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Makes requests to the freesound API. Should not be used directly.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">request</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{},</span> <span class="n">client</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">wrapper</span><span class="o">=</span><span class="n">FreesoundObject</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s">&#39;GET&#39;</span><span class="p">,</span><span class="n">data</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">params</span> <span class="k">if</span> <span class="n">params</span> <span class="k">else</span> <span class="p">{}</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">?</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="n">urlencode</span><span class="p">(</span><span class="n">p</span><span class="p">))</span> <span class="k">if</span> <span class="n">params</span> <span class="k">else</span> <span class="n">uri</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">urlencode</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="k">if</span> <span class="n">data</span> <span class="k">else</span> <span class="bp">None</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;Authorization&#39;</span><span class="p">:</span><span class="n">client</span><span class="o">.</span><span class="n">header</span><span class="p">}</span>
+        <span class="n">req</span> <span class="o">=</span> <span class="n">Request</span><span class="p">(</span><span class="n">url</span><span class="p">,</span><span class="n">d</span><span class="p">,</span><span class="n">headers</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">urlopen</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">HTTPError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">resp</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">code</span> <span class="o">&gt;=</span> <span class="mi">200</span> <span class="ow">and</span> <span class="n">e</span><span class="o">.</span><span class="n">code</span> <span class="o">&lt;</span> <span class="mi">300</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">resp</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">FreesoundException</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">code</span><span class="p">,</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">resp</span><span class="p">))</span>
+        <span class="n">resp</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">FreesoundException</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="s">&quot;Couldn&#39;t parse response&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">wrapper</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">wrapper</span><span class="p">(</span><span class="n">result</span><span class="p">,</span><span class="n">client</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">retrieve</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span><span class="n">path</span><span class="p">):</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">Retriever</span><span class="p">()</span>
+        <span class="n">r</span><span class="o">.</span><span class="n">addheader</span><span class="p">(</span><span class="s">&#39;Authorization&#39;</span><span class="p">,</span> <span class="n">client</span><span class="o">.</span><span class="n">header</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">r</span><span class="o">.</span><span class="n">retrieve</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Pager"><a class="viewcode-back" href="../index.html#freesound.Pager">[docs]</a><span class="k">class</span> <span class="nc">Pager</span><span class="p">(</span><span class="n">FreesoundObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Paginates search results. Can be used in for loops to iterate its results array.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Sound</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="n">key</span><span class="p">],</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Pager.next_page"><a class="viewcode-back" href="../index.html#freesound.Pager.next_page">[docs]</a>    <span class="k">def</span> <span class="nf">next_page</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">        Get a Pager with the next results page.</span>
+<span class="sd">        &quot;&quot;&quot;</span> 
+        <span class="k">return</span> <span class="n">FSRequest</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">next</span><span class="p">,</span> <span class="p">{},</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">,</span> <span class="n">Pager</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Pager.previous_page"><a class="viewcode-back" href="../index.html#freesound.Pager.previous_page">[docs]</a>    <span class="k">def</span> <span class="nf">previous_page</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">        Get a Pager with the previous results page.</span>
+<span class="sd">        &quot;&quot;&quot;</span> 
+        <span class="k">return</span> <span class="n">FSRequest</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">previous</span><span class="p">,</span> <span class="p">{},</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">,</span> <span class="n">Pager</span><span class="p">)</span>
+</div></div>
+<div class="viewcode-block" id="GenericPager"><a class="viewcode-back" href="../index.html#freesound.GenericPager">[docs]</a><span class="k">class</span> <span class="nc">GenericPager</span><span class="p">(</span><span class="n">Pager</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Paginates results for objects different than Sound.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">FreesoundObject</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="n">key</span><span class="p">],</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="CombinedSearchPager"><a class="viewcode-back" href="../index.html#freesound.CombinedSearchPager">[docs]</a><span class="k">class</span> <span class="nc">CombinedSearchPager</span><span class="p">(</span><span class="n">FreesoundObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Combined search uses a different pagination style. </span>
+<span class="sd">    The total amount of results is not available, and the size of the page is not guaranteed.</span>
+<span class="sd">    Use :py:meth:`~freesound.CombinedSearchPager.more` to get more results if available.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Sound</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="bp">None</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CombinedSearchPager.more"><a class="viewcode-back" href="../index.html#freesound.CombinedSearchPager.more">[docs]</a>    <span class="k">def</span> <span class="nf">more</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get more results</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">FSRequest</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">more</span><span class="p">,</span> <span class="p">{},</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">,</span> <span class="n">CombinedSearchPager</span><span class="p">)</span>
+</div></div>
+<div class="viewcode-block" id="Sound"><a class="viewcode-back" href="../index.html#freesound.Sound">[docs]</a><span class="k">class</span> <span class="nc">Sound</span><span class="p">(</span><span class="n">FreesoundObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    Freesound Sound resources </span>
+
+<span class="sd">    &gt;&gt;&gt; sound = c.get_sound(6) </span>
+<span class="sd">    &quot;&quot;&quot;</span> 
+<div class="viewcode-block" id="Sound.retrieve"><a class="viewcode-back" href="../index.html#freesound.Sound.retrieve">[docs]</a>    <span class="k">def</span> <span class="nf">retrieve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">        Download the original sound file (requires Oauth2 authentication).</span>
+<span class="sd">        http://freesound.org/docs/api/resources_apiv2.html#download-sound-oauth2-required</span>
+
+<span class="sd">         &gt;&gt;&gt; sound.retrieve(&quot;/tmp&quot;) </span>
+<span class="sd">        &quot;&quot;&quot;</span> 
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">name</span> <span class="k">if</span> <span class="n">name</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">uri</span> <span class="o">=</span> <span class="n">URIS</span><span class="o">.</span><span class="n">uri</span><span class="p">(</span><span class="n">URIS</span><span class="o">.</span><span class="n">DOWNLOAD</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">FSRequest</span><span class="o">.</span><span class="n">retrieve</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">,</span><span class="n">path</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Sound.retrieve_preview"><a class="viewcode-back" href="../index.html#freesound.Sound.retrieve_preview">[docs]</a>    <span class="k">def</span> <span class="nf">retrieve_preview</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">        Download the low quality mp3 preview.</span>
+
+<span class="sd">        &gt;&gt;&gt; sound.retrieve_preview(&quot;/tmp&quot;) </span>
+<span class="sd">        &quot;&quot;&quot;</span> 
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">name</span> <span class="k">if</span> <span class="n">name</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">previews</span><span class="o">.</span><span class="n">preview_lq_mp3</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">FSRequest</span><span class="o">.</span><span class="n">retrieve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">previews</span><span class="o">.</span><span class="n">preview_lq_mp3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">,</span><span class="n">path</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Sound.get_analysis"><a class="viewcode-back" href="../index.html#freesound.Sound.get_analysis">[docs]</a>    <span class="k">def</span> <span class="nf">get_analysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">descriptors</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">        Get content-based descriptors.</span>
+<span class="sd">        http://freesound.org/docs/api/resources_apiv2.html#sound-analysis</span>
+
+<span class="sd">        &gt;&gt;&gt; a = sound.get_analysis(descriptors=&quot;lowlevel.pitch.mean&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; print(a.lowlevel.pitch.mean)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">uri</span> <span class="o">=</span> <span class="n">URIS</span><span class="o">.</span><span class="n">uri</span><span class="p">(</span><span class="n">URIS</span><span class="o">.</span><span class="n">SOUND_ANALYSIS</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">descriptors</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s">&#39;descriptors&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">descriptors</span>
+        <span class="k">return</span> <span class="n">FSRequest</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">,</span><span class="n">FreesoundObject</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Sound.get_similar"><a class="viewcode-back" href="../index.html#freesound.Sound.get_similar">[docs]</a>    <span class="k">def</span> <span class="nf">get_similar</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get similar sounds based on content-based descriptors.</span>
+<span class="sd">        http://freesound.org/docs/api/resources_apiv2.html#similar-sounds</span>
+
+<span class="sd">        &gt;&gt;&gt; s = sound.get_similar()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">uri</span> <span class="o">=</span> <span class="n">URIS</span><span class="o">.</span><span class="n">uri</span><span class="p">(</span><span class="n">URIS</span><span class="o">.</span><span class="n">SIMILAR_SOUNDS</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">FSRequest</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="p">{},</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">,</span> <span class="n">Pager</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Sound.get_comments"><a class="viewcode-back" href="../index.html#freesound.Sound.get_comments">[docs]</a>    <span class="k">def</span> <span class="nf">get_comments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get user comments.</span>
+<span class="sd">        http://freesound.org/docs/api/resources_apiv2.html#sound-comments</span>
+
+<span class="sd">        &gt;&gt;&gt; comments = sound.get_comments()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">uri</span> <span class="o">=</span> <span class="n">URIS</span><span class="o">.</span><span class="n">uri</span><span class="p">(</span><span class="n">URIS</span><span class="o">.</span><span class="n">COMMENTS</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">FSRequest</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="p">{},</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">,</span> <span class="n">GenericPager</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;&lt;Sound: id=&quot;</span><span class="si">%s</span><span class="s">&quot;, name=&quot;</span><span class="si">%s</span><span class="s">&quot;&gt;&#39;</span> <span class="o">%</span> \
+                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="User"><a class="viewcode-back" href="../index.html#freesound.User">[docs]</a><span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="n">FreesoundObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Freesound User resources.</span>
+
+<span class="sd">    &gt;&gt;&gt; u=c.get_user(&quot;xserra&quot;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="User.get_sounds"><a class="viewcode-back" href="../index.html#freesound.User.get_sounds">[docs]</a>    <span class="k">def</span> <span class="nf">get_sounds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get user sounds.</span>
+<span class="sd">        http://freesound.org/docs/api/resources_apiv2.html#user-sounds</span>
+
+<span class="sd">        &gt;&gt;&gt; u.get_sounds()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">uri</span> <span class="o">=</span> <span class="n">URIS</span><span class="o">.</span><span class="n">uri</span><span class="p">(</span><span class="n">URIS</span><span class="o">.</span><span class="n">USER_SOUNDS</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">FSRequest</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="p">{},</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">,</span> <span class="n">Pager</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="User.get_packs"><a class="viewcode-back" href="../index.html#freesound.User.get_packs">[docs]</a>    <span class="k">def</span> <span class="nf">get_packs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get user packs.</span>
+<span class="sd">        http://freesound.org/docs/api/resources_apiv2.html#user-packs</span>
+
+<span class="sd">        &gt;&gt;&gt; u.get_packs()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">uri</span> <span class="o">=</span> <span class="n">URIS</span><span class="o">.</span><span class="n">uri</span><span class="p">(</span><span class="n">URIS</span><span class="o">.</span><span class="n">USER_PACKS</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">FSRequest</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="p">{},</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">,</span> <span class="n">GenericPager</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="User.get_bookmark_categories"><a class="viewcode-back" href="../index.html#freesound.User.get_bookmark_categories">[docs]</a>    <span class="k">def</span> <span class="nf">get_bookmark_categories</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get user bookmark categories.</span>
+<span class="sd">        http://freesound.org/docs/api/resources_apiv2.html#user-bookmark-categories</span>
+
+<span class="sd">        &gt;&gt;&gt; u.get_bookmark_categories()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">uri</span> <span class="o">=</span> <span class="n">URIS</span><span class="o">.</span><span class="n">uri</span><span class="p">(</span><span class="n">URIS</span><span class="o">.</span><span class="n">USER_BOOKMARK_CATEGORIES</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">FSRequest</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="p">{},</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">,</span> <span class="n">GenericPager</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="User.get_bookmark_category_sounds"><a class="viewcode-back" href="../index.html#freesound.User.get_bookmark_category_sounds">[docs]</a>    <span class="k">def</span> <span class="nf">get_bookmark_category_sounds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">category_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get user bookmarks.</span>
+<span class="sd">        http://freesound.org/docs/api/resources_apiv2.html#user-bookmark-category-sounds</span>
+
+<span class="sd">        &gt;&gt;&gt; p=u.get_bookmark_category_sounds(0)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">uri</span> <span class="o">=</span> <span class="n">URIS</span><span class="o">.</span><span class="n">uri</span><span class="p">(</span><span class="n">URIS</span><span class="o">.</span><span class="n">USER_BOOKMARK_CATEGORY_SOUNDS</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span><span class="n">category_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">FSRequest</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="p">{},</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">,</span> <span class="n">Pager</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s">&#39;&lt;User: &quot;</span><span class="si">%s</span><span class="s">&quot;&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Pack"><a class="viewcode-back" href="../index.html#freesound.Pack">[docs]</a><span class="k">class</span> <span class="nc">Pack</span><span class="p">(</span><span class="n">FreesoundObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Freesound Pack resources.</span>
+
+<span class="sd">    &gt;&gt;&gt; p = c.get_pack(3416)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Pack.get_sounds"><a class="viewcode-back" href="../index.html#freesound.Pack.get_sounds">[docs]</a>    <span class="k">def</span> <span class="nf">get_sounds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get pack sounds</span>
+<span class="sd">        http://freesound.org/docs/api/resources_apiv2.html#pack-sounds</span>
+
+<span class="sd">        &gt;&gt;&gt; sounds = p.get_sounds()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">uri</span> <span class="o">=</span> <span class="n">URIS</span><span class="o">.</span><span class="n">uri</span><span class="p">(</span><span class="n">URIS</span><span class="o">.</span><span class="n">PACK_SOUNDS</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">FSRequest</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="p">{},</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">,</span> <span class="n">Pager</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;&lt;Pack:  name=&quot;</span><span class="si">%s</span><span class="s">&quot;&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">freesound.py 2.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Gerard Roma.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>
