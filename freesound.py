@@ -201,7 +201,6 @@ class FSRequest:
         d = urllib.urlencode(data) if data else None
         headers = {'Authorization':client.header}
         req = Request(url,d,headers)
-        print uri
         try:
             f = urlopen(req)
         except HTTPError as e:
