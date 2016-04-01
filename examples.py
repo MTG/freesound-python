@@ -16,9 +16,12 @@ print "\n"
 print "Get analysis:"
 print "-------------"
 analysis = s.get_analysis()
+
 mfcc = analysis.lowlevel.mfcc.mean
 print "Mfccs: " + str(mfcc)
+print analysis.as_json()  # you can also get the original json (this apply to any FreesoundObject)
 print "\n"
+
 
 # Get similar sounds example
 print "Similar sounds: "
@@ -75,3 +78,4 @@ results_pager = results_pager.next_page()
 for i in range(0, len(results_pager.results)):
     sound = results_pager[i]
     print "\t- " + sound.name + " by " + sound.username
+
