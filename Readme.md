@@ -14,7 +14,7 @@ Note that POST resources are not supported. Downloading full quality sounds requ
 
 Example usage:
 
-```
+```python
 import freesound, sys,os
 
 c = freesound.FreesoundClient()
