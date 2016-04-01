@@ -168,7 +168,7 @@ class FreesoundObject:
             if isinstance(v, dict):
                 self.__dict__[k] = FreesoundObject(v, client)
    
-    def as_json(self):
+    def as_dict(self):
         return self.json_dict
         
 class FreesoundException(Exception):
