@@ -72,15 +72,16 @@ class FreesoundClient():
     token = ""
     header =""
 
-    def get_sound(self, sound_id):
+    def get_sound(self, sound_id, **params):
         """
         Get a sound object by id
+        Relevant params: descriptors, fields, normalized
         http://freesound.org/docs/api/resources_apiv2.html#sound-resources
 
         >>> sound = c.get_sound(6)
         """
         uri = URIS.uri(URIS.SOUND,sound_id)
-        return FSRequest.request(uri, {}, self, Sound)
+        return FSRequest.request(uri, params, self, Sound)
 
     def text_search(self, **params):
         """
@@ -212,6 +213,7 @@ class FSRequest:
             if e.code >= 200 and e.code < 300:
                 return resp
             else:
+                print e.code
                 raise FreesoundException(e.code,json.loads(resp))
         resp = f.read()
         f.close()
@@ -297,7 +299,7 @@ class Sound(FreesoundObject):
         path = os.path.join(directory, name if name else str(self.previews.preview_lq_mp3.split("/")[-1]))
         return FSRequest.retrieve(self.previews.preview_lq_mp3, self.client,path)
 
-    def get_analysis(self, descriptors=None):
+    def get_analysis(self, descriptors=None, normalized=0):
         """
         Get content-based descriptors.
         http://freesound.org/docs/api/resources_apiv2.html#sound-analysis
@@ -309,27 +311,31 @@ class Sound(FreesoundObject):
         params = {}
         if descriptors:
             params['descriptors']=descriptors
+        if normalized:
+            params['normalized']=normalized
         return FSRequest.request(uri, params,self.client,FreesoundObject)
 
-    def get_similar(self):
+    def get_similar(self, **params):
         """
         Get similar sounds based on content-based descriptors.
+        Relevant params: page, page_size, fields, descriptors, normalized,descriptors_filter
         http://freesound.org/docs/api/resources_apiv2.html#similar-sounds
 
         >>> s = sound.get_similar()
         """
         uri = URIS.uri(URIS.SIMILAR_SOUNDS,self.id)
-        return FSRequest.request(uri, {},self.client, Pager)
+        return FSRequest.request(uri, params,self.client, Pager)
 
-    def get_comments(self):
+    def get_comments(self, **params):
         """
         Get user comments.
+        Relevant params: page, page_size
         http://freesound.org/docs/api/resources_apiv2.html#sound-comments
 
         >>> comments = sound.get_comments()
         """
         uri = URIS.uri(URIS.COMMENTS,self.id)
-        return FSRequest.request(uri, {}, self.client, GenericPager)
+        return FSRequest.request(uri, params, self.client, GenericPager)
 
     def __repr__(self):
         return '<Sound: id="%s", name="%s">' % \
@@ -341,45 +347,49 @@ class User(FreesoundObject):
 
     >>> u=c.get_user("xserra")
     """
-    def get_sounds(self):
+    def get_sounds(self, **params):
         """
         Get user sounds.
+        Relevant params: page, page_size, fields, descriptors, normalized
         http://freesound.org/docs/api/resources_apiv2.html#user-sounds
 
         >>> u.get_sounds()
         """
         uri = URIS.uri(URIS.USER_SOUNDS,self.username)
-        return FSRequest.request(uri, {}, self.client, Pager)
+        return FSRequest.request(uri, params, self.client, Pager)
 
-    def get_packs(self):
+    def get_packs(self, **params):
         """
         Get user packs.
+        Relevant params: page, page_size
         http://freesound.org/docs/api/resources_apiv2.html#user-packs
 
         >>> u.get_packs()
         """
         uri = URIS.uri(URIS.USER_PACKS,self.username)
-        return FSRequest.request(uri, {}, self.client, GenericPager)
+        return FSRequest.request(uri, params, self.client, GenericPager)
 
-    def get_bookmark_categories(self):
+    def get_bookmark_categories(self, **params):
         """
         Get user bookmark categories.
+        Relevant params: page, page_size
         http://freesound.org/docs/api/resources_apiv2.html#user-bookmark-categories
 
         >>> u.get_bookmark_categories()
         """
         uri = URIS.uri(URIS.USER_BOOKMARK_CATEGORIES,self.username)
-        return FSRequest.request(uri, {}, self.client, GenericPager)
+        return FSRequest.request(uri, params, self.client, GenericPager)
 
-    def get_bookmark_category_sounds(self, category_id):
+    def get_bookmark_category_sounds(self, category_id, **params):
         """
         Get user bookmarks.
+        Relevant params: page, page_size, fields, descriptors, normalized
         http://freesound.org/docs/api/resources_apiv2.html#user-bookmark-category-sounds
 
         >>> p=u.get_bookmark_category_sounds(0)
         """
         uri = URIS.uri(URIS.USER_BOOKMARK_CATEGORY_SOUNDS,self.username,category_id)
-        return FSRequest.request(uri, {}, self.client, Pager)
+        return FSRequest.request(uri, params, self.client, Pager)
 
     def __repr__(self): return '<User: "%s">' % ( self.username)
 
@@ -389,15 +399,16 @@ class Pack(FreesoundObject):
 
     >>> p = c.get_pack(3416)
     """
-    def get_sounds(self):
+    def get_sounds(self, **params):
         """
         Get pack sounds
+        Relevant params: page, page_size, fields, descriptors, normalized
         http://freesound.org/docs/api/resources_apiv2.html#pack-sounds
 
         >>> sounds = p.get_sounds()
         """
         uri = URIS.uri(URIS.PACK_SOUNDS,self.id)
-        return FSRequest.request(uri, {}, self.client, Pager)
+        return FSRequest.request(uri, params, self.client, Pager)
 
     def __repr__(self):
         return '<Pack:  name="%s">' % ( self.name)
