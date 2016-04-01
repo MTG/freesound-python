@@ -19,7 +19,7 @@ analysis = s.get_analysis()
 
 mfcc = analysis.lowlevel.mfcc.mean
 print "Mfccs: " + str(mfcc)
-print analysis.as_json()  # you can also get the original json (this apply to any FreesoundObject)
+print analysis.as_dict()  # you can also get the original json (this apply to any FreesoundObject)
 print "\n"
 
 
