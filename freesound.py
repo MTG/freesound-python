@@ -71,13 +71,13 @@ class FreesoundClient():
     client_id = ""
     token = ""
     header =""
-
+ 
     def get_sound(self, sound_id, **params):
         """
         Get a sound object by id
         Relevant params: descriptors, fields, normalized
         http://freesound.org/docs/api/resources_apiv2.html#sound-resources
-
+        
         >>> sound = c.get_sound(6)
         """
         uri = URIS.uri(URIS.SOUND,sound_id)
@@ -213,7 +213,6 @@ class FSRequest:
             if e.code >= 200 and e.code < 300:
                 return resp
             else:
-                print e.code
                 raise FreesoundException(e.code,json.loads(resp))
         resp = f.read()
         f.close()
@@ -296,8 +295,11 @@ class Sound(FreesoundObject):
 
         >>> sound.retrieve_preview("/tmp")
         """
-        path = os.path.join(directory, name if name else str(self.previews.preview_lq_mp3.split("/")[-1]))
-        return FSRequest.retrieve(self.previews.preview_lq_mp3, self.client,path)
+        try:
+            path = os.path.join(directory, name if name else str(self.previews.preview_lq_mp3.split("/")[-1]))
+        except AttributeError:
+             raise FreesoundException('-', 'Preview uris are not present in your sound object. Please add them using the fields parameter in your request. See http://www.freesound.org/docs/api/resources_apiv2.html#response-sound-list.')
+        return FSRequest.retrieve(self.previews.preview_lq_mp3, self.client,path)   
 
     def get_analysis(self, descriptors=None, normalized=0):
         """
