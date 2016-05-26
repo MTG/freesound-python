@@ -4,7 +4,7 @@ freesound.py
 A python client for the [Freesound](http://freesound.org) APIv2.
 
 Find the API documentation at http://www.freesound.org/docs/api/. 
-Apply for an API key at http://www.freesound.org/api/apply/. 
+Apply for an API key at https://www.freesound.org/apiv2/apply/. 
 
 The client automatically maps function arguments to http parameters of the API. 
 JSON results are converted to python objects, but are also available in their original form (JSON loaded into dictionaries) using the method `.as_dict()` of returned objets (see [examples file](https://github.com/MTG/freesound-python/blob/master/examples.py)). 
