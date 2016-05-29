@@ -199,7 +199,7 @@ for j in range(0, len(bookmarks)):
     # Else if it runs out of pages break the loop
     try:
         while True:
-            # Loop for the amount of sounder per this category
+            # Loop for the amount of sounds per this category
             for i in range(0, len(results_pager.results)):
                 sound = results_pager[i]
                 print str(count + 1) + " Downloading \t- " + sound.name
