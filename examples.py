@@ -153,5 +153,4 @@ print "\t ----- PAGE 1 -----"
 for i in range(0, len(results_pager.results)):
     bookmark_cat = results_pager[i]
     print "\t- " + bookmark_cat.name + " with " + str(bookmark_cat.num_sounds)+ " sounds at " + bookmark_cat.url
-
 print "\n"
