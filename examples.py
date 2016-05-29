@@ -153,3 +153,61 @@ for i in range(0, len(results_pager.results)):
     bookmark_cat = results_pager[i]
     print "\t- " + bookmark_cat.name + " with " + str(bookmark_cat.num_sounds)+ " sounds at " + bookmark_cat.url
 print "\n"
+
+
+# Downloads all bookmarks in a user's categories on freesound, 
+# Requires OAUTH key, follow instructions on
+# https://freesound.org/docs/api/authentication.html#oauth2-authentication
+# Make sure you use the actual oauth token and not the authorisation token in step 2
+import os
+# Create Path for downloads in workingdir/tmp
+# Settings required:
+# Set oauth token here, note 'token' changes to 'oauth' compared to other examples
+c.set_token("<YOUR_OAUTH_KEY_HERE>", "oauth")
+# Set the username you want to download all bookmarks from
+u = c.get_user("frederic.font")
+pathN = os.path.join(os.getcwd(), "tmp")
+try:
+    os.mkdir(pathN)
+except:
+    # Incase Path already exists
+    print("Path Already exists")
+print "User Bookmark Download:"
+print "-----------"
+print "User name: " + u.username
+# Get all bookmark categories
+results_pager = u.get_bookmark_categories(page_size=10)
+# Create an array to store the bookmark_id
+bookmarks = [0]
+for k in range(1, len(results_pager.results)):
+    # Split Bookmark url into an array and take just the id which is then passed to the bookmark_id array
+    # Note starting at 1 to len because The first result is always the default bookmark directory (0)
+    # which I include in the array by default.
+    cat = results_pager[k].url.split('/')[7]
+    bookmarks.append(int(cat))
+print(str(len(bookmarks)) + " Bookmark Categories \n")
+# Loop for count of bookmark categories
+for j in range(0, len(bookmarks)):
+    count = 0
+    print("Category " + str(j + 1) + " Downloading...")
+    # Create a generic results_pager and get all the sounds from the first category
+    results_pager = u.get_bookmark_category_sounds(bookmarks[j])
+    # Get the number of sounds per category
+    num = str(results_pager.count)
+    print "Num Sounds: " + num
+    # Try/Except the next page of the result pager. If there is no exception there is another page
+    # Else if it runs out of pages break the loop
+    try:
+        while True:
+            # Loop for the amount of sounder per this category
+            for i in range(0, len(results_pager.results)):
+                sound = results_pager[i]
+                print str(count + 1) + " Downloading \t- " + sound.name
+                # Retrieve Sound to tmp directory
+                sound.retrieve("/tmp")
+                count += 1
+            results_pager = results_pager.next_page()
+    except AttributeError:
+        # Attribute error is returned if pager runs out, so break at attribute error, no pages left.
+        print("Downloaded  " + num + " Sounds to /tmp")
+        # All Sounds downloaded
