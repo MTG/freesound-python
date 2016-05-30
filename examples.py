@@ -1,5 +1,4 @@
 import freesound
-import os
 c = freesound.FreesoundClient()
 c.set_token("<YOUR_API_KEY_HERE>","token")
 

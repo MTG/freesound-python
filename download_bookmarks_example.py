@@ -20,23 +20,23 @@ except:
     print("Path Already exists")
 print "User Bookmark Download:"
 print "-----------"
-print "User name: " + user.username
+print "User name: ", user.username
 # Get all bookmark categories
 results_pager = user.get_bookmark_categories(page_size=10)
 # Create an array to store the bookmark_id
 bookmarks = [0]
-for bookmark in range(1, len(results_pager.results)):
+for bookmark in results_pager.results[1:]:
     # Split Bookmark url into an array and take just the id which is then passed to the bookmark_id array
     # Note starting at 1 to len because The first result is always the default bookmark directory (0)
     # which I include in the array by default.
-    cat = results_pager[bookmark].url.split('/')[7]
-    bookmarks.append(int(cat))
+    bookmark_category = bookmark['url'].split('/')[7]
+    bookmarks.append(bookmark_category)
 print len(bookmarks), "Bookmark Categories \n"
 # Loop for count of bookmark categories
-for count, sound_index in enumerate(bookmarks):
-    print "Category", count+1, " Downloading..."
+for index, bookmark_category in enumerate(bookmarks):
+    print "Category", index + 1, " Downloading..."
     # Create a generic results_pager and get all the sounds from the first category
-    results_pager = user.get_bookmark_category_sounds(bookmarks[count])
+    results_pager = user.get_bookmark_category_sounds(bookmark_category)
     # Get the number of sounds per category
     number_sounds = results_pager.count
     print "Num Sounds:", number_sounds
@@ -45,8 +45,8 @@ for count, sound_index in enumerate(bookmarks):
     try:
         while True:
             # Loop for the amount of sounder per this category
-            for count_sound, sound in enumerate(results_pager):
-                print count_sound+1, "Downloading -", sound.name
+            for sound_index, sound in enumerate(results_pager):
+                print sound_index + 1, "Downloading -", sound.name
                 # Retrieve Sound to tmp directory
                 sound_type = freesound_client.get_sound(sound.id, fields="type").type
                 # Set file type
