@@ -22,26 +22,23 @@ try:
 except:
     pass
 
-user = freesound_client.get_user("frederic.font")
+user = freesound_client.get_user("apitest")
 print "Username:", user.username
 
 bookmarks_results_pager = user.get_bookmark_categories(page_size=100)
 print "Num categories:", bookmarks_results_pager.count
 
 for bookmark in bookmarks_results_pager:
-    # we have to parse the bokmark category from the sound URL
-    bookmark_category = bookmark.sounds.split('/')[7]
-
     print "\tCategory:", bookmark.name
     print "\tNum sounds:", bookmark.num_sounds
 
     sounds_results_pager = user.get_bookmark_category_sounds(
-        bookmark_category,
+        bookmark.id,
         fields="id,name,type",
         page_size=1
     )
 
-    while sounds_results_pager.results:
+    while True:
         for sound in sounds_results_pager:
             print "\t\tDownloading:", sound.name
 
@@ -52,5 +49,8 @@ for bookmark in bookmarks_results_pager:
                 filename = "%s.%s" % (sound.name, sound.type)
 
             sound.retrieve(path_name, name=filename)
+
+        if not sounds_results_pager.next:
+            break
 
         sounds_results_pager = sounds_results_pager.next_page()
