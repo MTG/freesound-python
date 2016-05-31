@@ -5,6 +5,7 @@
 # step 2
 import freesound
 import os
+import sys
 
 access_token = os.getenv('FREESOUND_ACCESS_TOKEN', None)
 if access_token is None:
