@@ -19,12 +19,14 @@ import re
 import json
 
 try:  # python 3
-    from urllib.request import urlopen, FancyUrlOpener, Request  # noqa
+    from urllib.request import urlopen, FancyURLopener, Request  # noqa
     from urllib.parse import urlencode, quote
     from urllib.error import HTTPError
+    py3 = True
 except ImportError:  # python 2.7
     from urllib import urlencode, FancyURLopener, quote
     from urllib2 import HTTPError, urlopen, Request
+    py3 = False
 
 
 class URIS():
@@ -244,7 +246,10 @@ class FSRequest:
                 return resp
             else:
                 raise FreesoundException(e.code, json.loads(resp))
-        resp = f.read()
+        if py3:        
+            resp = f.read().decode("utf-8")
+        else:
+            resp = f.read()
         f.close()
         result = None
         try:
