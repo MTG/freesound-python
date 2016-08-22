@@ -281,6 +281,23 @@ class Pager(FreesoundObject):
         Get a Pager with the previous results page.
         """
         return FSRequest.request(self.previous, {}, self.client, Pager)
+    def get_page(self, n):
+        url = self.next
+        
+        uri = urlparse(url)
+        for index,item in enumerate(uri):
+            if ('query' in item):
+                urid=index
+
+        query = uri[urid].split("&")
+
+        for index,item in enumerate(query):
+            if ("page" in item):
+                query[index] = 'page=' + str(n)
+
+        url = uri[0] + '://' + uri[1] + uri[2] + '?' + "&".join(query)
+        return FSRequest.request(url, {}, self.client, Pager)
+ 
 
 
 class GenericPager(Pager):
