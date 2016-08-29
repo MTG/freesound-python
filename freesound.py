@@ -20,7 +20,7 @@ import json
 
 try:  # python 3
     from urllib.request import urlopen, FancyUrlOpener, Request  # noqa
-    from urllib.parse import urlencode, quote
+    from urllib.parse import urlparse, urlencode, quote
     from urllib.error import HTTPError
 except ImportError:  # python 2.7
     from urllib import urlencode, FancyURLopener, quote
@@ -283,20 +283,23 @@ class Pager(FreesoundObject):
         return FSRequest.request(self.previous, {}, self.client, Pager)
     def get_page(self, n):
         url = self.next
-        
-        uri = urlparse(url)
-        for index,item in enumerate(uri):
-            if ('query' in item):
-                urid=index
+       
+        if (url):
+            uri = urlparse(url)
+            for index,item in enumerate(uri):
+                if ('query' in item):
+                    urid=index
 
-        query = uri[urid].split("&")
+            query = uri[urid].split("&")
 
-        for index,item in enumerate(query):
-            if ("page" in item):
-                query[index] = 'page=' + str(n)
+            for index,item in enumerate(query):
+                if ("page" in item):
+                    query[index] = 'page=' + str(n)
 
-        url = uri[0] + '://' + uri[1] + uri[2] + '?' + "&".join(query)
-        return FSRequest.request(url, {}, self.client, Pager)
+            url = uri[0] + '://' + uri[1] + uri[2] + '?' + "&".join(query)
+            return FSRequest.request(url, {}, self.client, Pager)
+        else:
+            return None
  
 
 
