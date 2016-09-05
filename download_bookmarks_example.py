@@ -3,14 +3,15 @@
 # https://freesound.org/docs/api/authentication.html#oauth2-authentication
 # Make sure you use the actual oauth token and not the authorisation token in
 # step 2
+from __future__ import print_function
 import freesound
 import os
 import sys
 
 access_token = os.getenv('FREESOUND_ACCESS_TOKEN', None)
 if access_token is None:
-    print "You need to set your ACCESS TOKEN as an evironment variable",
-    print "named FREESOUND_ACCESS_TOKEN"
+    print("You need to set your ACCESS TOKEN as an evironment variable",)
+    print("named FREESOUND_ACCESS_TOKEN")
     sys.exit(-1)
 
 freesound_client = freesound.FreesoundClient()
@@ -23,14 +24,14 @@ except:
     pass
 
 user = freesound_client.get_user("apitest")
-print "Username:", user.username
+print("Username:", user.username)
 
 bookmarks_results_pager = user.get_bookmark_categories(page_size=100)
-print "Num categories:", bookmarks_results_pager.count
+print("Num categories:", bookmarks_results_pager.count)
 
 for bookmark in bookmarks_results_pager:
-    print "\tCategory:", bookmark.name
-    print "\tNum sounds:", bookmark.num_sounds
+    print("\tCategory:", bookmark.name)
+    print("\tNum sounds:", bookmark.num_sounds)
 
     sounds_results_pager = user.get_bookmark_category_sounds(
         bookmark.id,
@@ -40,7 +41,7 @@ for bookmark in bookmarks_results_pager:
 
     while True:
         for sound in sounds_results_pager:
-            print "\t\tDownloading:", sound.name
+            print("\t\tDownloading:", sound.name)
 
             # Some sound filenames already end with the type...
             if sound.name.endswith(sound.type):
