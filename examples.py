@@ -1,7 +1,7 @@
+from __future__ import print_function
 import freesound
 import os
 import sys
-from __future__ import print_function
 
 api_key = os.getenv('FREESOUND_API_KEY', None)
 if api_key is None:
