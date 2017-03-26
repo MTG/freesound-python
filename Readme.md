@@ -32,7 +32,7 @@ Installation
 ============
 1) clone or download
 
-run:
+2) run:
 ```
 python setup.py install
 ```
