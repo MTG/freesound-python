@@ -27,3 +27,11 @@ for sound in results:
     print(sound.name)
 
 ```
+
+Installation
+============
+1) clone or download
+run:
+```
+python setup.py install
+```
