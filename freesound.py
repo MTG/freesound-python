@@ -305,7 +305,7 @@ class CombinedSearchPager(FreesoundObject):
     available.
     """
     def __getitem__(self, key):
-        return Sound(self.results[key], None)
+        return Sound(self.results[key], self.client)
 
     def more(self):
         """
