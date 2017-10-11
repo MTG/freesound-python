@@ -261,10 +261,16 @@ class FSRequest:
         return result
 
     @classmethod
-    def retrieve(cls, url, client, path):
+    def retrieve(cls, url, client, path, reporthook=None):
+        """
+        :param reporthook: a callback which is called when a block of data
+        has been downloaded. The callback should have a signature such as
+        def updateProgress(self, count, blockSize, totalSize)
+        For further reference, check the urllib docs.
+        """
         r = Retriever()
         r.addheader('Authorization', client.header)
-        return r.retrieve(url, path)
+        return r.retrieve(url, path, reporthook)
 
 
 class Pager(FreesoundObject):
@@ -322,16 +328,21 @@ class Sound(FreesoundObject):
 
     >>> sound = c.get_sound(6)
     """
-    def retrieve(self, directory, name=False):
+    def retrieve(self, directory, name=False, reporthook=None):
         """
         Download the original sound file (requires Oauth2 authentication).
         http://freesound.org/docs/api/resources_apiv2.html#download-sound-oauth2-required
 
          >>> sound.retrieve("/tmp")
+         
+        :param reporthook: a callback which is called when a block of data
+        has been downloaded. The callback should have a signature such as
+        def updateProgress(self, count, blockSize, totalSize)
+        For further reference, check the urllib docs.
         """
         path = os.path.join(directory, name if name else self.name)
         uri = URIS.uri(URIS.DOWNLOAD, self.id)
-        return FSRequest.retrieve(uri, self.client, path)
+        return FSRequest.retrieve(uri, self.client, path, reporthook)
 
     def retrieve_preview(self, directory, name=False):
         """
