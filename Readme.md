@@ -1,7 +1,8 @@
 freesound.py
 ============
 
-A python client for the [Freesound](http://freesound.org) APIv2.
+A Python client for the [Freesound](http://freesound.org) APIv2.
+This client should both in Python 2 and 3.
 
 Find the API documentation at http://www.freesound.org/docs/api/. 
 Apply for an API key at https://www.freesound.org/apiv2/apply/. 
