@@ -383,6 +383,17 @@ class Sound(FreesoundObject):
             params['normalized'] = normalized
         return FSRequest.request(uri, params, self.client, FreesoundObject)
 
+
+    def get_analysis_frames(self):
+        """
+        Get analysis frames of one descriptor
+        >>> a = sound.get_analysis_frames()
+        """
+        uri = self.analysis_frames
+        uri = os.path.splitext(uri)[0]+'.json' #temp bugfix: Freesound API is returning a .yaml in sound.analysis_frames, while it should be .json
+        return FSRequest.request(uri, params, self.client, FreesoundObject)
+
+
     def get_similar(self, **params):
         """
         Get similar sounds based on content-based descriptors.
