@@ -370,10 +370,13 @@ class Sound(FreesoundObject):
     def get_analysis(self, descriptors=None, normalized=0):
         """
         Get content-based descriptors.
+        Returns the statistical aggregation as a Sound object. 
         http://freesound.org/docs/api/resources_apiv2.html#sound-analysis
 
-        >>> a = sound.get_analysis(descriptors="lowlevel.pitch.mean")
-        >>> print(a.lowlevel.pitch.mean)
+        Example:
+        >>> analysis_object = sound.get_analysis(descriptors="lowlevel.pitch.mean")
+        >>> mffc_mean = analysis_object.lowlevel.mfcc.mean # <-- access analysis results by using object properties
+        >>> mffc_mean = analysis_object.as_dict()['lowlevel']['mfcc']['mean'] # <-- Is possible to convert it to a Dictionary
         """
         uri = URIS.uri(URIS.SOUND_ANALYSIS, self.id)
         params = {}
@@ -386,9 +389,14 @@ class Sound(FreesoundObject):
 
     def get_analysis_frames(self):
         """
-        Get analysis frames. Retrieves a list of all computed descriptors for all frames as a FreesoundObject.
+        Get analysis frames. 
+        Returns a list of all computed descriptors for all frames as a FreesoundObject.
         https://freesound.org/docs/api/analysis_docs.html#analysis-docs
-        >>> a = sound.get_analysis_frames()
+        
+        Example:
+        >>> analysis_frames_object = sound.get_analysis_frames()
+        >>> pitch_by_frames = analysis_frames_object.lowlevel.pich # <-- access analysis results by using object properties
+        >>> pitch_by_frames = analysis_frames_object.as_dict()['lowlevel']['pich'] # <-- Is possible to convert it to a Dictionary
         """
         uri = self.analysis_frames
         return FSRequest.request(uri, client=self.client, wrapper=FreesoundObject)
