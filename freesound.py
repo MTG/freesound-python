@@ -386,12 +386,12 @@ class Sound(FreesoundObject):
 
     def get_analysis_frames(self):
         """
-        Get analysis frames of one descriptor
+        Get analysis frames. Retrieves a list of all computed descriptors for all frames as a FreesoundObject.
+        https://freesound.org/docs/api/analysis_docs.html#analysis-docs
         >>> a = sound.get_analysis_frames()
         """
         uri = self.analysis_frames
-        uri = os.path.splitext(uri)[0]+'.json' #temp bugfix: Freesound API is returning a .yaml in sound.analysis_frames, while it should be .json
-        return FSRequest.request(uri, params, self.client, FreesoundObject)
+        return FSRequest.request(uri, client=self.client, wrapper=FreesoundObject)
 
 
     def get_similar(self, **params):
