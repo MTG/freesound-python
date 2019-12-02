@@ -101,6 +101,14 @@ class FreesoundClient():
         >>> )
         >>> for snd in sounds: print snd.name
         """
+        if 'fields' not in params:
+            # If no fields parameter is specified, add fields parameter
+            # with default Freesound fields for a query plus the previews
+            # URIs. This will simplify the process of retrieving previews
+            # as it will ensure that the preview URIs are already loaded in
+            # the Sound objects resulting from a search query.
+            params['fields'] = 'id,name,tags,username,license,previews'
+
         uri = URIS.uri(URIS.TEXT_SEARCH)
         return FSRequest.request(uri, params, self, Pager)
 
@@ -116,6 +124,10 @@ class FreesoundClient():
         >>>     fields="id,name,url")
         >>> for snd in sounds: print snd.name
         """
+        if 'fields' not in params:
+            # See comment in text_search method above
+            params['fields'] = 'id,name,tags,username,license,previews'
+
         uri = URIS.uri(URIS.CONTENT_SEARCH)
         return FSRequest.request(uri, params, self, Pager)
 
@@ -129,6 +141,10 @@ class FreesoundClient():
         >>>     filter="single-note"
         >>> )
         """
+        if 'fields' not in params:
+            # See comment in text_search method above
+            params['fields'] = 'id,name,tags,username,license,previews'
+
         uri = URIS.uri(URIS.COMBINED_SEARCH)
         return FSRequest.request(uri, params, self, CombinedSearchPager)
 
