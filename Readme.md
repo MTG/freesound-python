@@ -16,7 +16,7 @@ Note that POST resources are not supported. Downloading full quality sounds requ
 Example usage:
 
 ```python
-import freesound, sys,os
+import freesound
 
 client = freesound.FreesoundClient()
 client.set_token("<your_api_key>","token")
