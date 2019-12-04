@@ -356,7 +356,8 @@ class Sound(FreesoundObject):
         def updateProgress(self, count, blockSize, totalSize)
         For further reference, check the urllib docs.
         """
-        path = os.path.join(directory, name if name else self.name)
+        filename = (name if name else self.name).replace('/','_')
+        path = os.path.join(directory, filename)
         uri = URIS.uri(URIS.DOWNLOAD, self.id)
         return FSRequest.retrieve(uri, self.client, path, reporthook)
 
