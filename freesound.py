@@ -192,7 +192,7 @@ class FreesoundObject:
         self.json_dict = json_dict
 
         def replace_dashes(d):
-            for k, v in d.items():
+            for k, v in list(d.items()):
                 if "-" in k:
                     d[k.replace("-", "_")] = d[k]
                     del d[k]
