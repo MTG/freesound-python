@@ -37,3 +37,8 @@ Installation
 ```
 python setup.py install
 ```
+
+Alternatively you should also be able to install directly from Github with:
+```
+pip install git+https://github.com/MTG/freesound-python
+```
