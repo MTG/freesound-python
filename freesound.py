@@ -14,22 +14,14 @@ requires Oauth2 authentication
 (see http://freesound.org/docs/api/authentication.html). Oauth2 authentication
 is supported, but you are expected to implement the workflow.
 """
-import os
 import re
-import json
+from pathlib import Path
+from urllib.parse import quote
 
-try:  # python 3
-    from urllib.request import urlopen, FancyURLopener, Request  # noqa
-    from urllib.parse import urlencode, quote
-    from urllib.error import HTTPError
-    py3 = True
-except ImportError:  # python 2.7
-    from urllib import urlencode, FancyURLopener, quote
-    from urllib2 import HTTPError, urlopen, Request
-    py3 = False
+from requests import Session, Request, JSONDecodeError, HTTPError
 
 
-class URIS():
+class URIS:
     HOST = 'freesound.org'
     BASE = 'https://' + HOST + '/apiv2'
     TEXT_SEARCH = '/search/text/'
@@ -62,21 +54,35 @@ class URIS():
     @classmethod
     def uri(cls, uri, *args):
         for a in args:
-            uri = re.sub('<[\w_]+>', quote(str(a)), uri, 1)
+            uri = re.sub(r'<[\w_]+>', quote(str(a)), uri, 1)
         return cls.BASE + uri
 
 
-class FreesoundClient():
+class FreesoundTokenAuth:
+    """Attaches HTTP Token Authentication header to the given Request object."""
+
+    def __init__(self, token, auth_type="token"):
+        if auth_type == "oauth":
+            self.header = "Bearer " + token
+        else:
+            self.header = "Token " + token
+
+    def __call__(self, r):
+        r.headers['Authorization'] = self.header
+        return r
+
+
+class FreesoundClient:
     """
     Start here, create a FreesoundClient and set an authentication token using
     set_token
     >>> c = FreesoundClient()
     >>> c.set_token("<your_api_key>")
     """
-    client_secret = ""
-    client_id = ""
-    token = ""
-    header = ""
+    
+    def __init__(self):
+        self.auth = None  # should be set later
+        self.session = Session()
 
     def get_sound(self, sound_id, **params):
         """
@@ -153,7 +159,7 @@ class FreesoundClient():
         Get a user object by username
         http://freesound.org/docs/api/resources_apiv2.html#combined-search
 
-        >>> u=c.get_user("xserra")
+        >>> u = c.get_user("xserra")
         """
         uri = URIS.uri(URIS.USER, username)
         return FSRequest.request(uri, {}, self, User)
@@ -176,17 +182,14 @@ class FreesoundClient():
 
         >>> c.set_token("<your_api_key>")
         """
-        self.token = token  # TODO
-        if auth_type == 'oauth':
-            self.header = 'Bearer ' + token
-        else:
-            self.header = 'Token ' + token
+        self.auth = FreesoundTokenAuth(token, auth_type)
 
 
 class FreesoundObject:
     """
     Base object, automatically populated from parsed json dictionary
     """
+
     def __init__(self, json_dict, client):
         self.client = client
         self.json_dict = json_dict
@@ -213,80 +216,53 @@ class FreesoundException(Exception):
     """
     Freesound API exception
     """
+
     def __init__(self, http_code, detail):
         self.code = http_code
         self.detail = detail
 
     def __str__(self):
         return '<FreesoundException: code=%s, detail="%s">' % \
-                (self.code,  self.detail)
-
-
-class Retriever(FancyURLopener):
-    """
-    Downloads previews and original sound files to disk.
-    """
-    def http_error_default(self, url, fp, errcode, errmsg, headers):
-        resp = fp.read()
-        try:
-            error = json.loads(resp)
-            raise FreesoundException(errcode, error.detail)
-        except:
-            raise Exception(resp)
+               (self.code, self.detail)
 
 
 class FSRequest:
     """
     Makes requests to the freesound API. Should not be used directly.
     """
-    @classmethod
+
+    @staticmethod
     def request(
-            cls,
             uri,
-            params={},
-            client=None,
+            params,
+            client,
             wrapper=FreesoundObject,
             method='GET',
-            data=False
-            ):
-        p = params if params else {}
-        url = '%s?%s' % (uri, urlencode(p)) if params else uri
-        d = urlencode(data) if data else None
-        headers = {'Authorization': client.header}
-        req = Request(url, d, headers)
+    ):
+        req = Request(method, uri, params=params, auth=client.auth)
+        prepared = client.session.prepare_request(req)
+        resp = client.session.send(prepared)
         try:
-            f = urlopen(req)
+            resp.raise_for_status()
         except HTTPError as e:
-            resp = e.read()
-            if e.code >= 200 and e.code < 300:
-                return resp
-            else:
-                raise FreesoundException(e.code, json.loads(resp))
-        if py3:        
-            resp = f.read().decode("utf-8")
-        else:
-            resp = f.read()
-        f.close()
-        result = None
+            raise FreesoundException(resp.status_code, resp.reason) from e
         try:
-            result = json.loads(resp)
-        except:
-            raise FreesoundException(0, "Couldn't parse response")
+            result = resp.json()
+        except JSONDecodeError as e:
+            raise FreesoundException(0, "Couldn't parse response") from e
         if wrapper:
             return wrapper(result, client)
         return result
 
-    @classmethod
-    def retrieve(cls, url, client, path, reporthook=None):
-        """
-        :param reporthook: a callback which is called when a block of data
-        has been downloaded. The callback should have a signature such as
-        def updateProgress(self, count, blockSize, totalSize)
-        For further reference, check the urllib docs.
-        """
-        r = Retriever()
-        r.addheader('Authorization', client.header)
-        return r.retrieve(url, path, reporthook)
+    @staticmethod
+    def retrieve(url, client, path):
+        resp = client.session.get(url, auth=client.auth)
+        try:
+            resp.raise_for_status()
+        except HTTPError as e:
+            raise FreesoundException(resp.status_code, resp.reason) from e
+        with open(path, "wb") as fh:
+            fh.write(resp.content)
 
 
 class Pager(FreesoundObject):
@@ -294,6 +270,7 @@ class Pager(FreesoundObject):
     Paginates search results. Can be used in for loops to iterate its results
     array.
     """
+
     def __getitem__(self, key):
         return Sound(self.results[key], self.client)
 
@@ -314,6 +291,7 @@ class GenericPager(Pager):
     """
     Paginates results for objects different than Sound.
     """
+
     def __getitem__(self, key):
         return FreesoundObject(self.results[key], self.client)
 
@@ -326,6 +304,7 @@ class CombinedSearchPager(FreesoundObject):
     Use :py:meth:`~freesound.CombinedSearchPager.more` to get more results if
     available.
     """
+
     def __getitem__(self, key):
         return Sound(self.results[key], self.client)
 
@@ -344,33 +323,29 @@ class Sound(FreesoundObject):
 
     >>> sound = c.get_sound(6)
     """
-    def retrieve(self, directory, name=False, reporthook=None):
+
+    def retrieve(self, directory, name=False):
         """
         Download the original sound file (requires Oauth2 authentication).
         http://freesound.org/docs/api/resources_apiv2.html#download-sound-oauth2-required
 
          >>> sound.retrieve("/tmp")
-         
-        :param reporthook: a callback which is called when a block of data
-        has been downloaded. The callback should have a signature such as
-        def updateProgress(self, count, blockSize, totalSize)
-        For further reference, check the urllib docs.
         """
-        filename = (name if name else self.name).replace('/','_')
-        path = os.path.join(directory, filename)
+        filename = (name if name else self.name).replace('/', '_')
+        path = Path(directory, filename)
         uri = URIS.uri(URIS.DOWNLOAD, self.id)
-        return FSRequest.retrieve(uri, self.client, path, reporthook)
+        return FSRequest.retrieve(uri, self.client, path)
 
-    def retrieve_preview(self, directory, name=False):
+    def retrieve_preview(self, directory, name=None):
         """
         Download the low quality mp3 preview.
 
         >>> sound.retrieve_preview("/tmp")
         """
         try:
-            path = os.path.join(
-                directory,
-                name if name else self.previews.preview_lq_mp3.split("/")[-1])
+            path = Path(directory,
+                        name if name else self.previews.preview_lq_mp3.split("/")[-1],
+                        )
         except AttributeError:
             raise FreesoundException(
                 '-',
@@ -403,7 +378,6 @@ class Sound(FreesoundObject):
             params['normalized'] = normalized
         return FSRequest.request(uri, params, self.client, FreesoundObject)
 
-
     def get_analysis_frames(self):
         """
         Get analysis frames. 
@@ -417,7 +391,6 @@ class Sound(FreesoundObject):
         """
         uri = self.analysis_frames
         return FSRequest.request(uri, client=self.client, wrapper=FreesoundObject)
-
 
     def get_similar(self, **params):
         """
@@ -443,15 +416,16 @@ class Sound(FreesoundObject):
         return FSRequest.request(uri, params, self.client, GenericPager)
 
     def __repr__(self):
-        return '<Sound: id="%s", name="%s">' % (self.id, self.name)
+        return f'<Sound: id="{self.id}", name="{self.name}">'
 
 
 class User(FreesoundObject):
     """
     Freesound User resources.
 
-    >>> u=c.get_user("xserra")
+    >>> u = c.get_user("xserra")
     """
+
     def get_sounds(self, **params):
         """
         Get user sounds.
@@ -491,7 +465,7 @@ class User(FreesoundObject):
         Relevant params: page, page_size, fields, descriptors, normalized
         http://freesound.org/docs/api/resources_apiv2.html#user-bookmark-category-sounds
 
-        >>> p=u.get_bookmark_category_sounds(0)
+        >>> p = u.get_bookmark_category_sounds(0)
         """
         uri = URIS.uri(
             URIS.USER_BOOKMARK_CATEGORY_SOUNDS, self.username, category_id
@@ -508,6 +482,7 @@ class Pack(FreesoundObject):
 
     >>> p = c.get_pack(3416)
     """
+
     def get_sounds(self, **params):
         """
         Get pack sounds
