@@ -3,7 +3,6 @@
 # https://freesound.org/docs/api/authentication.html#oauth2-authentication
 # Make sure you use the actual oauth token and not the authorisation token in
 # step 2
-from __future__ import print_function
 import freesound
 import os
 import sys
@@ -47,7 +46,7 @@ for bookmark in bookmarks_results_pager:
             if sound.name.endswith(sound.type):
                 filename = sound.name
             else:
-                filename = "%s.%s" % (sound.name, sound.type)
+                filename = "{}.{}".format(sound.name, sound.type)
 
             sound.retrieve(path_name, name=filename)
 
