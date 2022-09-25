@@ -1,9 +1,9 @@
 """
 A python client for the Freesound API.
 
-Find the API documentation at http://www.freesound.org/docs/api/.
+Find the API documentation at https://www.freesound.org/docs/api/.
 
-Apply for an API key at http://www.freesound.org/api/apply/.
+Apply for an API key at https://www.freesound.org/api/apply/.
 
 The client automatically maps function arguments to http parameters of the API.
 JSON results are converted to python objects. The main object types (Sound,
@@ -11,7 +11,7 @@ User, Pack) are augmented with the corresponding API calls.
 
 Note that POST resources are not supported. Downloading full quality sounds
 requires Oauth2 authentication
-(see http://freesound.org/docs/api/authentication.html). Oauth2 authentication
+(see https://freesound.org/docs/api/authentication.html). Oauth2 authentication
 is supported, but you are expected to implement the workflow.
 """
 import re
@@ -88,7 +88,7 @@ class FreesoundClient:
         """
         Get a sound object by id
         Relevant params: descriptors, fields, normalized
-        http://freesound.org/docs/api/resources_apiv2.html#sound-resources
+        https://freesound.org/docs/api/resources_apiv2.html#sound-resources
 
         >>> sound = c.get_sound(6)
         """
@@ -100,7 +100,7 @@ class FreesoundClient:
         Search sounds using a text query and/or filter. Returns an iterable
         Pager object. The fields parameter allows you to specify the
         information you want in the results list
-        http://freesound.org/docs/api/resources_apiv2.html#text-search
+        https://freesound.org/docs/api/resources_apiv2.html#text-search
 
         >>> sounds = c.text_search(
         >>>     query="dubstep", filter="tag:loop", fields="id,name,url"
@@ -122,7 +122,7 @@ class FreesoundClient:
         """
         Search sounds using a content-based descriptor target and/or filter
         See essentia_example.py for an example using essentia
-        http://freesound.org/docs/api/resources_apiv2.html#content-search
+        https://freesound.org/docs/api/resources_apiv2.html#content-search
 
         >>> sounds = c.content_based_search(
         >>>     target="lowlevel.pitch.mean:220",
@@ -140,7 +140,7 @@ class FreesoundClient:
     def combined_search(self, **params):
         """
         Combine both text and content-based queries.
-        http://freesound.org/docs/api/resources_apiv2.html#combined-search
+        https://freesound.org/docs/api/resources_apiv2.html#combined-search
 
         >>> sounds = c.combined_search(
         >>>     target="lowlevel.pitch.mean:220",
@@ -157,7 +157,7 @@ class FreesoundClient:
     def get_user(self, username):
         """
         Get a user object by username
-        http://freesound.org/docs/api/resources_apiv2.html#combined-search
+        https://freesound.org/docs/api/resources_apiv2.html#combined-search
 
         >>> u = c.get_user("xserra")
         """
@@ -167,7 +167,7 @@ class FreesoundClient:
     def get_pack(self, pack_id):
         """
         Get a user object by username
-        http://freesound.org/docs/api/resources_apiv2.html#combined-search
+        https://freesound.org/docs/api/resources_apiv2.html#combined-search
 
         >>> p = c.get_pack(3416)
         """
@@ -177,8 +177,8 @@ class FreesoundClient:
     def set_token(self, token, auth_type="token"):
         """
         Set your API key or Oauth2 token
-        http://freesound.org/docs/api/authentication.html
-        http://freesound.org/docs/api/resources_apiv2.html#combined-search
+        https://freesound.org/docs/api/authentication.html
+        https://freesound.org/docs/api/resources_apiv2.html#combined-search
 
         >>> c.set_token("<your_api_key>")
         """
@@ -327,7 +327,7 @@ class Sound(FreesoundObject):
     def retrieve(self, directory, name=False):
         """
         Download the original sound file (requires Oauth2 authentication).
-        http://freesound.org/docs/api/resources_apiv2.html#download-sound-oauth2-required
+        https://freesound.org/docs/api/resources_apiv2.html#download-sound-oauth2-required
 
          >>> sound.retrieve("/tmp")
         """
@@ -351,7 +351,7 @@ class Sound(FreesoundObject):
                 '-',
                 'Preview uris are not present in your sound object. Please add'
                 ' them using the fields parameter in your request. See '
-                ' http://www.freesound.org/docs/api/resources_apiv2.html#response-sound-list.'  # noqa
+                ' https://www.freesound.org/docs/api/resources_apiv2.html#response-sound-list.'  # noqa
             )
         return FSRequest.retrieve(
             self.previews.preview_lq_mp3,
@@ -363,7 +363,7 @@ class Sound(FreesoundObject):
         """
         Get content-based descriptors.
         Returns the statistical aggregation as a Sound object. 
-        http://freesound.org/docs/api/resources_apiv2.html#sound-analysis
+        https://freesound.org/docs/api/resources_apiv2.html#sound-analysis
 
         Example:
         >>> analysis_object = sound.get_analysis(descriptors="lowlevel.pitch.mean")
@@ -397,7 +397,7 @@ class Sound(FreesoundObject):
         Get similar sounds based on content-based descriptors.
         Relevant params: page, page_size, fields, descriptors, normalized,
         descriptors_filter
-        http://freesound.org/docs/api/resources_apiv2.html#similar-sounds
+        https://freesound.org/docs/api/resources_apiv2.html#similar-sounds
 
         >>> s = sound.get_similar()
         """
@@ -408,7 +408,7 @@ class Sound(FreesoundObject):
         """
         Get user comments.
         Relevant params: page, page_size
-        http://freesound.org/docs/api/resources_apiv2.html#sound-comments
+        https://freesound.org/docs/api/resources_apiv2.html#sound-comments
 
         >>> comments = sound.get_comments()
         """
@@ -430,7 +430,7 @@ class User(FreesoundObject):
         """
         Get user sounds.
         Relevant params: page, page_size, fields, descriptors, normalized
-        http://freesound.org/docs/api/resources_apiv2.html#user-sounds
+        https://freesound.org/docs/api/resources_apiv2.html#user-sounds
 
         >>> u.get_sounds()
         """
@@ -441,7 +441,7 @@ class User(FreesoundObject):
         """
         Get user packs.
         Relevant params: page, page_size
-        http://freesound.org/docs/api/resources_apiv2.html#user-packs
+        https://freesound.org/docs/api/resources_apiv2.html#user-packs
 
         >>> u.get_packs()
         """
@@ -452,7 +452,7 @@ class User(FreesoundObject):
         """
         Get user bookmark categories.
         Relevant params: page, page_size
-        http://freesound.org/docs/api/resources_apiv2.html#user-bookmark-categories
+        https://freesound.org/docs/api/resources_apiv2.html#user-bookmark-categories
 
         >>> u.get_bookmark_categories()
         """
@@ -463,7 +463,7 @@ class User(FreesoundObject):
         """
         Get user bookmarks.
         Relevant params: page, page_size, fields, descriptors, normalized
-        http://freesound.org/docs/api/resources_apiv2.html#user-bookmark-category-sounds
+        https://freesound.org/docs/api/resources_apiv2.html#user-bookmark-category-sounds
 
         >>> p = u.get_bookmark_category_sounds(0)
         """
@@ -487,7 +487,7 @@ class Pack(FreesoundObject):
         """
         Get pack sounds
         Relevant params: page, page_size, fields, descriptors, normalized
-        http://freesound.org/docs/api/resources_apiv2.html#pack-sounds
+        https://freesound.org/docs/api/resources_apiv2.html#pack-sounds
 
         >>> sounds = p.get_sounds()
         """
