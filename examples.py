@@ -4,7 +4,7 @@ import sys
 
 api_key = os.getenv('FREESOUND_API_KEY', None)
 if api_key is None:
-    print("You need to set your API key as an evironment variable",)
+    print("You need to set your API key as an environment variable")
     print("named FREESOUND_API_KEY")
     sys.exit(-1)
 
@@ -44,7 +44,7 @@ analysis = sound.get_analysis()
 
 mfcc = analysis.lowlevel.mfcc.mean
 print("Mfccs:", mfcc)
-# you can also get the original json (this apply to any FreesoundObject):
+# you can also get the original json (this applies to any FreesoundObject):
 print(analysis.as_dict())
 print()
 

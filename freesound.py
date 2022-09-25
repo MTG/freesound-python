@@ -289,7 +289,7 @@ class Pager(FreesoundObject):
 
 class GenericPager(Pager):
     """
-    Paginates results for objects different than Sound.
+    Paginates results for objects different from Sound.
     """
 
     def __getitem__(self, key):

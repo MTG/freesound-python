@@ -9,7 +9,7 @@ import sys
 
 access_token = os.getenv('FREESOUND_ACCESS_TOKEN', None)
 if access_token is None:
-    print("You need to set your ACCESS TOKEN as an evironment variable",)
+    print("You need to set your ACCESS TOKEN as an environment variable")
     print("named FREESOUND_ACCESS_TOKEN")
     sys.exit(-1)
 
