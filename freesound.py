@@ -390,7 +390,7 @@ class Sound(FreesoundObject):
         >>> pitch_by_frames = analysis_frames_object.as_dict()['lowlevel']['pich'] # <-- Is possible to convert it to a Dictionary
         """
         uri = self.analysis_frames
-        return FSRequest.request(uri, client=self.client, wrapper=FreesoundObject)
+        return FSRequest.request(uri, params=None, client=self.client, wrapper=FreesoundObject)
 
     def get_similar(self, **params):
         """
