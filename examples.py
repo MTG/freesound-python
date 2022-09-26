@@ -1,6 +1,7 @@
-import freesound
 import os
 import sys
+
+import freesound
 
 api_key = os.getenv('FREESOUND_API_KEY', None)
 if api_key is None:

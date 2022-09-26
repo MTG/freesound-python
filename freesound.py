@@ -79,7 +79,7 @@ class FreesoundClient:
     >>> c = FreesoundClient()
     >>> c.set_token("<your_api_key>")
     """
-    
+
     def __init__(self):
         self.auth = None  # should be set later
         self.session = Session()
@@ -346,13 +346,13 @@ class Sound(FreesoundObject):
             path = Path(directory,
                         name if name else self.previews.preview_lq_mp3.split("/")[-1],
                         )
-        except AttributeError:
+        except AttributeError as exc:
             raise FreesoundException(
                 '-',
                 'Preview uris are not present in your sound object. Please add'
                 ' them using the fields parameter in your request. See '
                 ' https://www.freesound.org/docs/api/resources_apiv2.html#response-sound-list.'  # noqa
-            )
+            ) from exc
         return FSRequest.retrieve(
             self.previews.preview_lq_mp3,
             self.client,
@@ -362,7 +362,7 @@ class Sound(FreesoundObject):
     def get_analysis(self, descriptors=None, normalized=0):
         """
         Get content-based descriptors.
-        Returns the statistical aggregation as a Sound object. 
+        Returns the statistical aggregation as a Sound object.
         https://freesound.org/docs/api/resources_apiv2.html#sound-analysis
 
         Example:
@@ -380,10 +380,10 @@ class Sound(FreesoundObject):
 
     def get_analysis_frames(self):
         """
-        Get analysis frames. 
+        Get analysis frames.
         Returns a list of all computed descriptors for all frames as a FreesoundObject.
         https://freesound.org/docs/api/analysis_docs.html#analysis-docs
-        
+
         Example:
         >>> analysis_frames_object = sound.get_analysis_frames()
         >>> pitch_by_frames = analysis_frames_object.lowlevel.pich # <-- access analysis results by using object properties
