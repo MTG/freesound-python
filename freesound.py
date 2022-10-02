@@ -258,6 +258,12 @@ class FSRequest:
 
     @staticmethod
     def retrieve(url, client, path, reporthook=None):
+        """
+        :param reporthook: a callback which is called when a block of data
+        has been downloaded. The callback should have a signature such as
+        def updateProgress(self, count, blockSize, totalSize)
+        For further reference, check the urllib docs.
+        """
         resp = client.session.get(url, auth=client.auth)
         try:
             resp.raise_for_status()
@@ -338,6 +344,11 @@ class Sound(FreesoundObject):
         https://freesound.org/docs/api/resources_apiv2.html#download-sound-oauth2-required
 
          >>> sound.retrieve("/tmp")
+
+        :param reporthook: a callback which is called when a block of data
+        has been downloaded. The callback should have a signature such as
+        def updateProgress(self, count, blockSize, totalSize)
+        For further reference, check the urllib docs.
         """
         filename = (name if name else self.name).replace('/', '_')
         path = Path(directory, filename)
