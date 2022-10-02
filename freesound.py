@@ -20,6 +20,8 @@ from urllib.parse import quote
 
 from requests import Session, Request, JSONDecodeError, HTTPError
 
+CONTENT_CHUNK_SIZE = 10 * 1024
+
 
 class URIS:
     HOST = 'freesound.org'
@@ -255,14 +257,20 @@ class FSRequest:
         return result
 
     @staticmethod
-    def retrieve(url, client, path):
+    def retrieve(url, client, path, reporthook=None):
         resp = client.session.get(url, auth=client.auth)
         try:
             resp.raise_for_status()
         except HTTPError as e:
             raise FreesoundException(resp.status_code, resp.reason) from e
+        content_length = resp.headers.get("Content-Length", -1)
+        if reporthook is not None:
+            reporthook(0, CONTENT_CHUNK_SIZE, content_length)
         with open(path, "wb") as fh:
-            fh.write(resp.content)
+            for i, chunk in enumerate(resp.iter_content(CONTENT_CHUNK_SIZE), start=1):
+                if reporthook is not None:
+                    reporthook(i, CONTENT_CHUNK_SIZE, content_length)
+                fh.write(chunk)
 
 
 class Pager(FreesoundObject):
@@ -324,7 +332,7 @@ class Sound(FreesoundObject):
     >>> sound = c.get_sound(6)
     """
 
-    def retrieve(self, directory, name=False):
+    def retrieve(self, directory, name=None, reporthook=None):
         """
         Download the original sound file (requires Oauth2 authentication).
         https://freesound.org/docs/api/resources_apiv2.html#download-sound-oauth2-required
@@ -334,7 +342,7 @@ class Sound(FreesoundObject):
         filename = (name if name else self.name).replace('/', '_')
         path = Path(directory, filename)
         uri = URIS.uri(URIS.DOWNLOAD, self.id)
-        return FSRequest.retrieve(uri, self.client, path)
+        return FSRequest.retrieve(uri, self.client, path, reporthook)
 
     def retrieve_preview(self, directory, name=None):
         """
