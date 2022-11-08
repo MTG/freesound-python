@@ -3,14 +3,14 @@
 # https://freesound.org/docs/api/authentication.html#oauth2-authentication
 # Make sure you use the actual oauth token and not the authorisation token in
 # step 2
-from __future__ import print_function
-import freesound
 import os
 import sys
 
+import freesound
+
 access_token = os.getenv('FREESOUND_ACCESS_TOKEN', None)
 if access_token is None:
-    print("You need to set your ACCESS TOKEN as an evironment variable",)
+    print("You need to set your ACCESS TOKEN as an environment variable")
     print("named FREESOUND_ACCESS_TOKEN")
     sys.exit(-1)
 
@@ -47,7 +47,7 @@ for bookmark in bookmarks_results_pager:
             if sound.name.endswith(sound.type):
                 filename = sound.name
             else:
-                filename = "%s.%s" % (sound.name, sound.type)
+                filename = f"{sound.name}.{sound.type}"
 
             sound.retrieve(path_name, name=filename)
 

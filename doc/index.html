@@ -44,7 +44,7 @@
 <p>Find the API documentation at <a class="reference external" href="http://www.freesound.org/docs/api/">http://www.freesound.org/docs/api/</a>.</p>
 <p>Apply for an API key at <a class="reference external" href="http://www.freesound.org/api/apply/">http://www.freesound.org/api/apply/</a>.</p>
 <p>The client automatically maps function arguments to http parameters of the API. JSON results are converted to python objects. The main object types (Sound, User, Pack) are augmented with the corresponding API calls.</p>
-<p>Note that POST resources are not supported. Downloading full quality sounds requires Oauth2 authentication (see <a class="reference external" href="http://freesound.org/docs/api/authentication.html">http://freesound.org/docs/api/authentication.html</a>). Oauth2 authentication is supported, but you are expected to implement the workflow.</p>
+<p>Note that POST resources are not supported. Downloading full quality sounds requires Oauth2 authentication (see <a class="reference external" href="https://freesound.org/docs/api/authentication.html">https://freesound.org/docs/api/authentication.html</a>). Oauth2 authentication is supported, but you are expected to implement the workflow.</p>
 <dl class="class">
 <dt id="freesound.CombinedSearchPager">
 <em class="property">class </em><tt class="descclassname">freesound.</tt><tt class="descname">CombinedSearchPager</tt><big>(</big><em>json_dict</em>, <em>client</em><big>)</big><a class="reference internal" href="_modules/freesound.html#CombinedSearchPager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#freesound.CombinedSearchPager" title="Permalink to this definition">¶</a></dt>
@@ -79,7 +79,7 @@ Use <a class="reference internal" href="#freesound.CombinedSearchPager.more" tit
 <dt id="freesound.FreesoundClient.combined_search">
 <tt class="descname">combined_search</tt><big>(</big><em>**params</em><big>)</big><a class="reference internal" href="_modules/freesound.html#FreesoundClient.combined_search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#freesound.FreesoundClient.combined_search" title="Permalink to this definition">¶</a></dt>
 <dd><p>Combine both text and content-based queries.
-<a class="reference external" href="http://freesound.org/docs/api/resources_apiv2.html#combined-search">http://freesound.org/docs/api/resources_apiv2.html#combined-search</a></p>
+<a class="reference external" href="https://freesound.org/docs/api/resources_apiv2.html#combined-search">https://freesound.org/docs/api/resources_apiv2.html#combined-search</a></p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sounds</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">combined_search</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="s">&quot;lowlevel.pitch.mean:220&quot;</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="s">&quot;single-note&quot;</span><span class="p">)</span>  
 </pre></div>
 </div>
@@ -90,7 +90,7 @@ Use <a class="reference internal" href="#freesound.CombinedSearchPager.more" tit
 <tt class="descname">content_based_search</tt><big>(</big><em>**params</em><big>)</big><a class="reference internal" href="_modules/freesound.html#FreesoundClient.content_based_search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#freesound.FreesoundClient.content_based_search" title="Permalink to this definition">¶</a></dt>
 <dd><p>Search sounds using a content-based descriptor target and/or filter
 See essentia_example.py for an example using essentia
-<a class="reference external" href="http://freesound.org/docs/api/resources_apiv2.html#content-search">http://freesound.org/docs/api/resources_apiv2.html#content-search</a></p>
+<a class="reference external" href="https://freesound.org/docs/api/resources_apiv2.html#content-search">https://freesound.org/docs/api/resources_apiv2.html#content-search</a></p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sounds</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">content_based_search</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="s">&quot;lowlevel.pitch.mean:220&quot;</span><span class="p">,</span><span class="n">descriptors_filter</span><span class="o">=</span><span class="s">&quot;lowlevel.pitch_instantaneous_confidence.mean:[0.8 TO 1]&quot;</span><span class="p">,</span><span class="n">fields</span><span class="o">=</span><span class="s">&quot;id,name,url&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">snd</span> <span class="ow">in</span> <span class="n">sounds</span><span class="p">:</span> <span class="k">print</span> <span class="n">snd</span><span class="o">.</span><span class="n">name</span> 
 </pre></div>
@@ -101,7 +101,7 @@ See essentia_example.py for an example using essentia
 <dt id="freesound.FreesoundClient.get_pack">
 <tt class="descname">get_pack</tt><big>(</big><em>pack_id</em><big>)</big><a class="reference internal" href="_modules/freesound.html#FreesoundClient.get_pack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#freesound.FreesoundClient.get_pack" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a user object by username
-<a class="reference external" href="http://freesound.org/docs/api/resources_apiv2.html#combined-search">http://freesound.org/docs/api/resources_apiv2.html#combined-search</a></p>
+<a class="reference external" href="https://freesound.org/docs/api/resources_apiv2.html#combined-search">https://freesound.org/docs/api/resources_apiv2.html#combined-search</a></p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">get_pack</span><span class="p">(</span><span class="mi">3416</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -111,7 +111,7 @@ See essentia_example.py for an example using essentia
 <dt id="freesound.FreesoundClient.get_sound">
 <tt class="descname">get_sound</tt><big>(</big><em>sound_id</em><big>)</big><a class="reference internal" href="_modules/freesound.html#FreesoundClient.get_sound"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#freesound.FreesoundClient.get_sound" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a sound object by id
-<a class="reference external" href="http://freesound.org/docs/api/resources_apiv2.html#sound-resources">http://freesound.org/docs/api/resources_apiv2.html#sound-resources</a></p>
+<a class="reference external" href="https://freesound.org/docs/api/resources_apiv2.html#sound-resources">https://freesound.org/docs/api/resources_apiv2.html#sound-resources</a></p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sound</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">get_sound</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span> 
 </pre></div>
 </div>
@@ -121,7 +121,7 @@ See essentia_example.py for an example using essentia
 <dt id="freesound.FreesoundClient.get_user">
 <tt class="descname">get_user</tt><big>(</big><em>username</em><big>)</big><a class="reference internal" href="_modules/freesound.html#FreesoundClient.get_user"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#freesound.FreesoundClient.get_user" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a user object by username
-<a class="reference external" href="http://freesound.org/docs/api/resources_apiv2.html#combined-search">http://freesound.org/docs/api/resources_apiv2.html#combined-search</a></p>
+<a class="reference external" href="https://freesound.org/docs/api/resources_apiv2.html#combined-search">https://freesound.org/docs/api/resources_apiv2.html#combined-search</a></p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">u</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="s">&quot;xserra&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -131,8 +131,8 @@ See essentia_example.py for an example using essentia
 <dt id="freesound.FreesoundClient.set_token">
 <tt class="descname">set_token</tt><big>(</big><em>token</em>, <em>auth_type='token'</em><big>)</big><a class="reference internal" href="_modules/freesound.html#FreesoundClient.set_token"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#freesound.FreesoundClient.set_token" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set your API key or Oauth2 token
-<a class="reference external" href="http://freesound.org/docs/api/authentication.html">http://freesound.org/docs/api/authentication.html</a>
-<a class="reference external" href="http://freesound.org/docs/api/resources_apiv2.html#combined-search">http://freesound.org/docs/api/resources_apiv2.html#combined-search</a></p>
+<a class="reference external" href="https://freesound.org/docs/api/authentication.html">https://freesound.org/docs/api/authentication.html</a>
+<a class="reference external" href="https://freesound.org/docs/api/resources_apiv2.html#combined-search">https://freesound.org/docs/api/resources_apiv2.html#combined-search</a></p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">set_token</span><span class="p">(</span><span class="s">&quot;&lt;your_api_key&gt;&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -143,7 +143,7 @@ See essentia_example.py for an example using essentia
 <tt class="descname">text_search</tt><big>(</big><em>**params</em><big>)</big><a class="reference internal" href="_modules/freesound.html#FreesoundClient.text_search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#freesound.FreesoundClient.text_search" title="Permalink to this definition">¶</a></dt>
 <dd><p>Search sounds using a text query and/or filter. Returns an iterable Pager object.
 The fields parameter allows you to specify the information you want in the results list
-<a class="reference external" href="http://freesound.org/docs/api/resources_apiv2.html#text-search">http://freesound.org/docs/api/resources_apiv2.html#text-search</a></p>
+<a class="reference external" href="https://freesound.org/docs/api/resources_apiv2.html#text-search">https://freesound.org/docs/api/resources_apiv2.html#text-search</a></p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sounds</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">text_search</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="s">&quot;dubstep&quot;</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="s">&quot;tag:loop&quot;</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="s">&quot;id,name,url&quot;</span><span class="p">)</span> 
 <span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">snd</span> <span class="ow">in</span> <span class="n">sounds</span><span class="p">:</span> <span class="k">print</span> <span class="n">snd</span><span class="o">.</span><span class="n">name</span> 
 </pre></div>
@@ -181,7 +181,7 @@ The fields parameter allows you to specify the information you want in the resul
 <dt id="freesound.Pack.get_sounds">
 <tt class="descname">get_sounds</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/freesound.html#Pack.get_sounds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#freesound.Pack.get_sounds" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get pack sounds
-<a class="reference external" href="http://freesound.org/docs/api/resources_apiv2.html#pack-sounds">http://freesound.org/docs/api/resources_apiv2.html#pack-sounds</a></p>
+<a class="reference external" href="https://freesound.org/docs/api/resources_apiv2.html#pack-sounds">https://freesound.org/docs/api/resources_apiv2.html#pack-sounds</a></p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sounds</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">get_sounds</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -224,7 +224,7 @@ The fields parameter allows you to specify the information you want in the resul
 <dt id="freesound.Sound.get_analysis">
 <tt class="descname">get_analysis</tt><big>(</big><em>descriptors=None</em><big>)</big><a class="reference internal" href="_modules/freesound.html#Sound.get_analysis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#freesound.Sound.get_analysis" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get content-based descriptors.
-<a class="reference external" href="http://freesound.org/docs/api/resources_apiv2.html#sound-analysis">http://freesound.org/docs/api/resources_apiv2.html#sound-analysis</a></p>
+<a class="reference external" href="https://freesound.org/docs/api/resources_apiv2.html#sound-analysis">https://freesound.org/docs/api/resources_apiv2.html#sound-analysis</a></p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">sound</span><span class="o">.</span><span class="n">get_analysis</span><span class="p">(</span><span class="n">descriptors</span><span class="o">=</span><span class="s">&quot;lowlevel.pitch.mean&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">lowlevel</span><span class="o">.</span><span class="n">pitch</span><span class="o">.</span><span class="n">mean</span><span class="p">)</span>
 </pre></div>
@@ -235,7 +235,7 @@ The fields parameter allows you to specify the information you want in the resul
 <dt id="freesound.Sound.get_comments">
 <tt class="descname">get_comments</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/freesound.html#Sound.get_comments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#freesound.Sound.get_comments" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get user comments.
-<a class="reference external" href="http://freesound.org/docs/api/resources_apiv2.html#sound-comments">http://freesound.org/docs/api/resources_apiv2.html#sound-comments</a></p>
+<a class="reference external" href="https://freesound.org/docs/api/resources_apiv2.html#sound-comments">https://freesound.org/docs/api/resources_apiv2.html#sound-comments</a></p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">comments</span> <span class="o">=</span> <span class="n">sound</span><span class="o">.</span><span class="n">get_comments</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -245,7 +245,7 @@ The fields parameter allows you to specify the information you want in the resul
 <dt id="freesound.Sound.get_similar">
 <tt class="descname">get_similar</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/freesound.html#Sound.get_similar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#freesound.Sound.get_similar" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get similar sounds based on content-based descriptors.
-<a class="reference external" href="http://freesound.org/docs/api/resources_apiv2.html#similar-sounds">http://freesound.org/docs/api/resources_apiv2.html#similar-sounds</a></p>
+<a class="reference external" href="https://freesound.org/docs/api/resources_apiv2.html#similar-sounds">https://freesound.org/docs/api/resources_apiv2.html#similar-sounds</a></p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">sound</span><span class="o">.</span><span class="n">get_similar</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -255,7 +255,7 @@ The fields parameter allows you to specify the information you want in the resul
 <dt id="freesound.Sound.retrieve">
 <tt class="descname">retrieve</tt><big>(</big><em>directory</em>, <em>name=False</em><big>)</big><a class="reference internal" href="_modules/freesound.html#Sound.retrieve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#freesound.Sound.retrieve" title="Permalink to this definition">¶</a></dt>
 <dd><p>Download the original sound file (requires Oauth2 authentication).
-<a class="reference external" href="http://freesound.org/docs/api/resources_apiv2.html#download-sound-oauth2-required">http://freesound.org/docs/api/resources_apiv2.html#download-sound-oauth2-required</a></p>
+<a class="reference external" href="https://freesound.org/docs/api/resources_apiv2.html#download-sound-oauth2-required">https://freesound.org/docs/api/resources_apiv2.html#download-sound-oauth2-required</a></p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sound</span><span class="o">.</span><span class="n">retrieve</span><span class="p">(</span><span class="s">&quot;/tmp&quot;</span><span class="p">)</span> 
 </pre></div>
 </div>
@@ -283,7 +283,7 @@ The fields parameter allows you to specify the information you want in the resul
 <dt id="freesound.User.get_bookmark_categories">
 <tt class="descname">get_bookmark_categories</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/freesound.html#User.get_bookmark_categories"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#freesound.User.get_bookmark_categories" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get user bookmark categories.
-<a class="reference external" href="http://freesound.org/docs/api/resources_apiv2.html#user-bookmark-categories">http://freesound.org/docs/api/resources_apiv2.html#user-bookmark-categories</a></p>
+<a class="reference external" href="https://freesound.org/docs/api/resources_apiv2.html#user-bookmark-categories">https://freesound.org/docs/api/resources_apiv2.html#user-bookmark-categories</a></p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">u</span><span class="o">.</span><span class="n">get_bookmark_categories</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -293,7 +293,7 @@ The fields parameter allows you to specify the information you want in the resul
 <dt id="freesound.User.get_bookmark_category_sounds">
 <tt class="descname">get_bookmark_category_sounds</tt><big>(</big><em>category_id</em><big>)</big><a class="reference internal" href="_modules/freesound.html#User.get_bookmark_category_sounds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#freesound.User.get_bookmark_category_sounds" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get user bookmarks.
-<a class="reference external" href="http://freesound.org/docs/api/resources_apiv2.html#user-bookmark-category-sounds">http://freesound.org/docs/api/resources_apiv2.html#user-bookmark-category-sounds</a></p>
+<a class="reference external" href="https://freesound.org/docs/api/resources_apiv2.html#user-bookmark-category-sounds">https://freesound.org/docs/api/resources_apiv2.html#user-bookmark-category-sounds</a></p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">get_bookmark_category_sounds</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -303,7 +303,7 @@ The fields parameter allows you to specify the information you want in the resul
 <dt id="freesound.User.get_packs">
 <tt class="descname">get_packs</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/freesound.html#User.get_packs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#freesound.User.get_packs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get user packs.
-<a class="reference external" href="http://freesound.org/docs/api/resources_apiv2.html#user-packs">http://freesound.org/docs/api/resources_apiv2.html#user-packs</a></p>
+<a class="reference external" href="https://freesound.org/docs/api/resources_apiv2.html#user-packs">https://freesound.org/docs/api/resources_apiv2.html#user-packs</a></p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">u</span><span class="o">.</span><span class="n">get_packs</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -313,7 +313,7 @@ The fields parameter allows you to specify the information you want in the resul
 <dt id="freesound.User.get_sounds">
 <tt class="descname">get_sounds</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/freesound.html#User.get_sounds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#freesound.User.get_sounds" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get user sounds.
-<a class="reference external" href="http://freesound.org/docs/api/resources_apiv2.html#user-sounds">http://freesound.org/docs/api/resources_apiv2.html#user-sounds</a></p>
+<a class="reference external" href="https://freesound.org/docs/api/resources_apiv2.html#user-sounds">https://freesound.org/docs/api/resources_apiv2.html#user-sounds</a></p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">u</span><span class="o">.</span><span class="n">get_sounds</span><span class="p">()</span>
 </pre></div>
 </div>

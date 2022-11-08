@@ -56,7 +56,7 @@ def query_by_voice():
     c = freesound.FreesoundClient()
     c.set_token("<YOUR_API_KEY_HERE>","token")
     d = record_audio()
-    mfcc_frames = extract_mfcc(d);
+    mfcc_frames = extract_mfcc(d)
     mfcc_mean=numpy.mean(mfcc_frames,1)    
     mfcc_var=numpy.var(mfcc_frames,1)   
     m =",".join(["%.3f"%x for x in mfcc_mean])
@@ -73,6 +73,3 @@ def query_by_voice():
         
     
     return results
-    
-    
-    
