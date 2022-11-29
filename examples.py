@@ -115,7 +115,7 @@ print()
 # Getting sounds from a user example
 print("User sounds:")
 print("-----------")
-user = freesound_client.get_user("Jovica")
+user = freesound_client.get_user("InspectorJ")
 print("User name:", user.username)
 results_pager = user.get_sounds()
 print("Num results:", results_pager.count)
@@ -132,7 +132,7 @@ print()
 # Getting sounds from a user example specifying some request parameters
 print("User sounds specifying some request parameters:")
 print("-----------")
-user = freesound_client.get_user("Jovica")
+user = freesound_client.get_user("Headphaze")
 print("User name:", user.username)
 results_pager = user.get_sounds(
     page_size=10,
