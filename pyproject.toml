@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "freesound-python"
+version = "1.1.0"
+description = "A Python client for the Freesound APIv2."
+authors = ["Universitat Pompeu Fabra"]
+maintainers = ["Frederic Font <frederic.font@upf.edu>"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/MTG/freesound-python"
+packages = [{include = "freesound.py"}]
+
+[tool.poetry.dependencies]
+python = "^3.6"
+requests = "<3.0,>2.27"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

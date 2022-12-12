@@ -1,9 +1,4 @@
-from distutils.core import setup
+import setuptools
 
-setup(
-    name="freesound-python",
-    version="1.1",
-    py_modules=["freesound"],
-    install_requires=["requests<3.0,>2.27"],
-    python_requires=">=3.6",
-)
+if __name__ == "__main__":
+    setuptools.setup()
