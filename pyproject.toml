@@ -7,7 +7,7 @@ maintainers = ["Frederic Font <frederic.font@upf.edu>"]
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/MTG/freesound-python"
-packages = [{include = "freesound"}]
+packages = [{include = "freesound.py"}]
 
 [tool.poetry.dependencies]
 python = "^3.6"
