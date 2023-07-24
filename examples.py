@@ -3,7 +3,7 @@ import sys
 
 import freesound
 
-api_key = os.getenv('FREESOUND_API_KEY', None)
+api_key = os.getenv("FREESOUND_API_KEY", None)
 if api_key is None:
     print("You need to set your API key as an environment variable")
     print("named FREESOUND_API_KEY")
@@ -29,12 +29,14 @@ sound = freesound_client.get_sound(
     96541,
     fields="id,name,username,duration,analysis",
     descriptors="lowlevel.spectral_centroid",
-    normalized=1
+    normalized=1,
 )
 print("Getting sound:", sound.name)
 print("Username:", sound.username)
 print("Duration:", str(sound.duration), "(s)")
-print("Spectral centroid:",)
+print(
+    "Spectral centroid:",
+)
 print(sound.analysis.lowlevel.spectral_centroid.as_dict())
 print()
 
@@ -53,8 +55,7 @@ print()
 print("Get analysis with specific normalized descriptor:")
 print("-------------")
 analysis = sound.get_analysis(
-    descriptors="lowlevel.spectral_centroid.mean",
-    normalized=1
+    descriptors="lowlevel.spectral_centroid.mean", normalized=1
 )
 spectral_centroid_mean = analysis.lowlevel.spectral_centroid.mean
 print("Normalized mean of spectral centroid:", spectral_centroid_mean)
@@ -74,7 +75,7 @@ print("---------------")
 results_pager = sound.get_similar(
     page_size=10,
     fields="name,username",
-    descriptors_filter="lowlevel.pitch.mean:[110 TO 180]"
+    descriptors_filter="lowlevel.pitch.mean:[110 TO 180]",
 )
 for similar_sound in results_pager:
     print("\t-", similar_sound.name, "by", similar_sound.username)
@@ -87,7 +88,7 @@ results_pager = freesound_client.text_search(
     query="violoncello",
     filter="tag:tenuto duration:[1.0 TO 15.0]",
     sort="rating_desc",
-    fields="id,name,previews,username"
+    fields="id,name,previews,username",
 )
 print("Num results:", results_pager.count)
 print("\t----- PAGE 1 -----")
@@ -104,7 +105,7 @@ print("Content based search:")
 print("---------------------")
 results_pager = freesound_client.content_based_search(
     descriptors_filter="lowlevel.pitch.var:[* TO 20]",
-    target='lowlevel.pitch_salience.mean:1.0 lowlevel.pitch.mean:440'
+    target="lowlevel.pitch_salience.mean:1.0 lowlevel.pitch.mean:440",
 )
 
 print("Num results:", results_pager.count)
@@ -137,20 +138,38 @@ print("User name:", user.username)
 results_pager = user.get_sounds(
     page_size=10,
     fields="name,username,samplerate,duration,analysis",
-    descriptors="rhythm.bpm"
+    descriptors="rhythm.bpm",
 )
 
 print("Num results:", results_pager.count)
 print("\t----- PAGE 1 -----")
 for sound in results_pager:
-    print("\t-", sound.name, "by", sound.username,)
-    print(", with sample rate of", sound.samplerate, "Hz and duration of",)
+    print(
+        "\t-",
+        sound.name,
+        "by",
+        sound.username,
+    )
+    print(
+        ", with sample rate of",
+        sound.samplerate,
+        "Hz and duration of",
+    )
     print(sound.duration, "s")
 print("\t----- PAGE 2 -----")
 results_pager = results_pager.next_page()
 for sound in results_pager:
-    print("\t-", sound.name, "by", sound.username,)
-    print(", with sample rate of", sound.samplerate, "Hz and duration of",)
+    print(
+        "\t-",
+        sound.name,
+        "by",
+        sound.username,
+    )
+    print(
+        ", with sample rate of",
+        sound.samplerate,
+        "Hz and duration of",
+    )
     print(sound.duration, "s")
 print()
 
@@ -162,19 +181,37 @@ print("Pack name:", pack.name)
 results_pager = pack.get_sounds(
     page_size=5,
     fields="id,name,username,duration,analysis",
-    descriptors="lowlevel.spectral_flatness_db"
+    descriptors="lowlevel.spectral_flatness_db",
 )
 print("Num results:", results_pager.count)
 print("\t----- PAGE 1 -----")
 for sound in results_pager:
-    print("\t-", sound.name, "by", sound.username, ", with duration of",)
-    print(sound.duration, "s and a mean spectral flatness of",)
+    print(
+        "\t-",
+        sound.name,
+        "by",
+        sound.username,
+        ", with duration of",
+    )
+    print(
+        sound.duration,
+        "s and a mean spectral flatness of",
+    )
     print(sound.analysis.lowlevel.spectral_flatness_db.mean)
 print("\t----- PAGE 2 -----")
 results_pager = results_pager.next_page()
 for sound in results_pager:
-    print("\t-", sound.name, "by", sound.username, ", with duration of",)
-    print(sound.duration, "s and a mean spectral flatness of",)
+    print(
+        "\t-",
+        sound.name,
+        "by",
+        sound.username,
+        ", with duration of",
+    )
+    print(
+        sound.duration,
+        "s and a mean spectral flatness of",
+    )
     print(sound.analysis.lowlevel.spectral_flatness_db.mean)
 print()
 
@@ -187,6 +224,11 @@ results_pager = user.get_bookmark_categories(page_size=10)
 print("Num results:", results_pager.count)
 print("\t----- PAGE 1 -----")
 for bookmark_category in results_pager:
-    print("\t-", bookmark_category.name, "with", bookmark_category.num_sounds,)
+    print(
+        "\t-",
+        bookmark_category.name,
+        "with",
+        bookmark_category.num_sounds,
+    )
     print("sounds at", bookmark_category.url)
 print()

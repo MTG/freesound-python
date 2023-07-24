@@ -24,39 +24,41 @@ CONTENT_CHUNK_SIZE = 10 * 1024
 
 
 class URIS:
-    HOST = 'freesound.org'
-    BASE = 'https://' + HOST + '/apiv2'
-    TEXT_SEARCH = '/search/text/'
-    CONTENT_SEARCH = '/search/content/'
-    COMBINED_SEARCH = '/search/combined/'
-    SOUND = '/sounds/<sound_id>/'
-    SOUND_ANALYSIS = '/sounds/<sound_id>/analysis/'
-    SIMILAR_SOUNDS = '/sounds/<sound_id>/similar/'
-    COMMENTS = '/sounds/<sound_id>/comments/'
-    DOWNLOAD = '/sounds/<sound_id>/download/'
-    UPLOAD = '/sounds/upload/'
-    DESCRIBE = '/sounds/<sound_id>/describe/'
-    PENDING = '/sounds/pending_uploads/'
-    BOOKMARK = '/sounds/<sound_id>/bookmark/'
-    RATE = '/sounds/<sound_id>/rate/'
-    COMMENT = '/sounds/<sound_id>/comment/'
-    AUTHORIZE = '/oauth2/authorize/'
-    LOGOUT = '/api-auth/logout/'
-    LOGOUT_AUTHORIZE = '/oauth2/logout_and_authorize/'
-    ME = '/me/'
-    USER = '/users/<username>/'
-    USER_SOUNDS = '/users/<username>/sounds/'
-    USER_PACKS = '/users/<username>/packs/'
-    USER_BOOKMARK_CATEGORIES = '/users/<username>/bookmark_categories/'
-    USER_BOOKMARK_CATEGORY_SOUNDS = '/users/<username>/bookmark_categories/<category_id>/sounds/'  # noqa
-    PACK = '/packs/<pack_id>/'
-    PACK_SOUNDS = '/packs/<pack_id>/sounds/'
-    PACK_DOWNLOAD = '/packs/<pack_id>/download/'
+    HOST = "freesound.org"
+    BASE = "https://" + HOST + "/apiv2"
+    TEXT_SEARCH = "/search/text/"
+    CONTENT_SEARCH = "/search/content/"
+    COMBINED_SEARCH = "/search/combined/"
+    SOUND = "/sounds/<sound_id>/"
+    SOUND_ANALYSIS = "/sounds/<sound_id>/analysis/"
+    SIMILAR_SOUNDS = "/sounds/<sound_id>/similar/"
+    COMMENTS = "/sounds/<sound_id>/comments/"
+    DOWNLOAD = "/sounds/<sound_id>/download/"
+    UPLOAD = "/sounds/upload/"
+    DESCRIBE = "/sounds/<sound_id>/describe/"
+    PENDING = "/sounds/pending_uploads/"
+    BOOKMARK = "/sounds/<sound_id>/bookmark/"
+    RATE = "/sounds/<sound_id>/rate/"
+    COMMENT = "/sounds/<sound_id>/comment/"
+    AUTHORIZE = "/oauth2/authorize/"
+    LOGOUT = "/api-auth/logout/"
+    LOGOUT_AUTHORIZE = "/oauth2/logout_and_authorize/"
+    ME = "/me/"
+    USER = "/users/<username>/"
+    USER_SOUNDS = "/users/<username>/sounds/"
+    USER_PACKS = "/users/<username>/packs/"
+    USER_BOOKMARK_CATEGORIES = "/users/<username>/bookmark_categories/"
+    USER_BOOKMARK_CATEGORY_SOUNDS = (
+        "/users/<username>/bookmark_categories/<category_id>/sounds/"  # noqa
+    )
+    PACK = "/packs/<pack_id>/"
+    PACK_SOUNDS = "/packs/<pack_id>/sounds/"
+    PACK_DOWNLOAD = "/packs/<pack_id>/download/"
 
     @classmethod
     def uri(cls, uri, *args):
         for a in args:
-            uri = re.sub(r'<[\w_]+>', quote(str(a)), uri, 1)
+            uri = re.sub(r"<[\w_]+>", quote(str(a)), uri, 1)
         return cls.BASE + uri
 
 
@@ -70,7 +72,7 @@ class FreesoundTokenAuth:
             self.header = "Token " + token
 
     def __call__(self, r):
-        r.headers['Authorization'] = self.header
+        r.headers["Authorization"] = self.header
         return r
 
 
@@ -109,13 +111,13 @@ class FreesoundClient:
         >>> )
         >>> for snd in sounds: print snd.name
         """
-        if 'fields' not in params:
+        if "fields" not in params:
             # If no fields parameter is specified, add fields parameter
             # with default Freesound fields for a query plus the previews
             # URIs. This will simplify the process of retrieving previews
             # as it will ensure that the preview URIs are already loaded in
             # the Sound objects resulting from a search query.
-            params['fields'] = 'id,name,tags,username,license,previews'
+            params["fields"] = "id,name,tags,username,license,previews"
 
         uri = URIS.uri(URIS.TEXT_SEARCH)
         return FSRequest.request(uri, params, self, Pager)
@@ -132,9 +134,9 @@ class FreesoundClient:
         >>>     fields="id,name,url")
         >>> for snd in sounds: print snd.name
         """
-        if 'fields' not in params:
+        if "fields" not in params:
             # See comment in text_search method above
-            params['fields'] = 'id,name,tags,username,license,previews'
+            params["fields"] = "id,name,tags,username,license,previews"
 
         uri = URIS.uri(URIS.CONTENT_SEARCH)
         return FSRequest.request(uri, params, self, Pager)
@@ -149,9 +151,9 @@ class FreesoundClient:
         >>>     filter="single-note"
         >>> )
         """
-        if 'fields' not in params:
+        if "fields" not in params:
             # See comment in text_search method above
-            params['fields'] = 'id,name,tags,username,license,previews'
+            params["fields"] = "id,name,tags,username,license,previews"
 
         uri = URIS.uri(URIS.COMBINED_SEARCH)
         return FSRequest.request(uri, params, self, CombinedSearchPager)
@@ -224,8 +226,7 @@ class FreesoundException(Exception):
         self.detail = detail
 
     def __str__(self):
-        return '<FreesoundException: code=%s, detail="%s">' % \
-               (self.code, self.detail)
+        return '<FreesoundException: code=%s, detail="%s">' % (self.code, self.detail)
 
 
 class FSRequest:
@@ -235,11 +236,11 @@ class FSRequest:
 
     @staticmethod
     def request(
-            uri,
-            params,
-            client,
-            wrapper=FreesoundObject,
-            method='GET',
+        uri,
+        params,
+        client,
+        wrapper=FreesoundObject,
+        method="GET",
     ):
         req = Request(method, uri, params=params, auth=client.auth)
         prepared = client.session.prepare_request(req)
@@ -326,9 +327,7 @@ class CombinedSearchPager(FreesoundObject):
         """
         Get more results
         """
-        return FSRequest.request(
-            self.more, {}, self.client, CombinedSearchPager
-        )
+        return FSRequest.request(self.more, {}, self.client, CombinedSearchPager)
 
 
 class Sound(FreesoundObject):
@@ -350,7 +349,7 @@ class Sound(FreesoundObject):
         def updateProgress(self, count, blockSize, totalSize)
         For further reference, check the urllib docs.
         """
-        filename = (name if name else self.name).replace('/', '_')
+        filename = (name if name else self.name).replace("/", "_")
         path = Path(directory, filename)
         uri = URIS.uri(URIS.DOWNLOAD, self.id)
         return FSRequest.retrieve(uri, self.client, path, reporthook)
@@ -362,21 +361,18 @@ class Sound(FreesoundObject):
         >>> sound.retrieve_preview("/tmp")
         """
         try:
-            path = Path(directory,
-                        name if name else self.previews.preview_lq_mp3.split("/")[-1],
-                        )
+            path = Path(
+                directory,
+                name if name else self.previews.preview_lq_mp3.split("/")[-1],
+            )
         except AttributeError as exc:
             raise FreesoundException(
-                '-',
-                'Preview uris are not present in your sound object. Please add'
-                ' them using the fields parameter in your request. See '
-                ' https://www.freesound.org/docs/api/resources_apiv2.html#response-sound-list.'  # noqa
+                "-",
+                "Preview uris are not present in your sound object. Please add"
+                " them using the fields parameter in your request. See "
+                " https://www.freesound.org/docs/api/resources_apiv2.html#response-sound-list.",  # noqa
             ) from exc
-        return FSRequest.retrieve(
-            self.previews.preview_lq_mp3,
-            self.client,
-            path
-        )
+        return FSRequest.retrieve(self.previews.preview_lq_mp3, self.client, path)
 
     def get_analysis(self, descriptors=None, normalized=0):
         """
@@ -392,9 +388,9 @@ class Sound(FreesoundObject):
         uri = URIS.uri(URIS.SOUND_ANALYSIS, self.id)
         params = {}
         if descriptors:
-            params['descriptors'] = descriptors
+            params["descriptors"] = descriptors
         if normalized:
-            params['normalized'] = normalized
+            params["normalized"] = normalized
         return FSRequest.request(uri, params, self.client, FreesoundObject)
 
     def get_analysis_frames(self):
@@ -409,7 +405,9 @@ class Sound(FreesoundObject):
         >>> pitch_by_frames = analysis_frames_object.as_dict()['lowlevel']['pich'] # <-- Is possible to convert it to a Dictionary
         """
         uri = self.analysis_frames
-        return FSRequest.request(uri, params=None, client=self.client, wrapper=FreesoundObject)
+        return FSRequest.request(
+            uri, params=None, client=self.client, wrapper=FreesoundObject
+        )
 
     def get_similar(self, **params):
         """
@@ -486,9 +484,7 @@ class User(FreesoundObject):
 
         >>> p = u.get_bookmark_category_sounds(0)
         """
-        uri = URIS.uri(
-            URIS.USER_BOOKMARK_CATEGORY_SOUNDS, self.username, category_id
-        )
+        uri = URIS.uri(URIS.USER_BOOKMARK_CATEGORY_SOUNDS, self.username, category_id)
         return FSRequest.request(uri, params, self.client, Pager)
 
     def __repr__(self):
