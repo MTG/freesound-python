@@ -20,10 +20,10 @@ import freesound
 client = freesound.FreesoundClient()
 client.set_token("<your_api_key>","token")
 
-results = client.text_search(query="dubstep",fields="id,name,previews")
+results = client.text_search(query="dubstep", fields="id,name,previews")
 
 for sound in results:
-    sound.retrieve_preview(".",sound.name+".mp3")
+    sound.retrieve_preview(".", sound.name + ".mp3")
     print(sound.name)
 
 ```
@@ -52,7 +52,7 @@ For example, adding proxies:
 ```python
 proxies = {
   'http': 'http://10.10.1.10:3128',
-  'https': 'http://10.10.1.10:1080',
+  'https': 'http://10.10.1.10:1080'
 }
 client.session.proxies.update(proxies)
 ```
