@@ -30,15 +30,15 @@ for sound in results:
 
 ## Installation
 1) clone or download
-
+   
 2) run:
 ```
 python setup.py install
 ```
 
-Alternatively you should also be able to install directly from GitHub with:
+Alternatively you can install with pip:
 ```
-pip install git+https://github.com/MTG/freesound-python
+pip install freesound-python
 ```
 
 ## Advanced usage
