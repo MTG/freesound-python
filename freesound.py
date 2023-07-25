@@ -355,16 +355,34 @@ class Sound(FreesoundObject):
         uri = URIS.uri(URIS.DOWNLOAD, self.id)
         return FSRequest.retrieve(uri, self.client, path, reporthook)
 
-    def retrieve_preview(self, directory, name=None):
+    def retrieve_preview(self, directory, name=None, quality='lq', file_format='mp3'):
         """
-        Download the low quality mp3 preview.
+        Download the sound preview.
+        If no quality or file format is specified, preview_lq_mp3 is returned. 
+
+        Parameters:
+            directory (str): The directory where the sound preview will be downloaded. 
+            name (str, optional): The name of the downloaded sound preview file. If no file 
+                                extension is specified or if it mismatches the chosen one in
+                                file_format, then the file_format is added as a file extension. 
+            quality (str, optional): The quality of the audio preview. Available values: 
+                                    'lq' (low quality) or 'hq' (high quality).
+            file_format (str, optional): The desired file format of the audio preview. 
+                                        Available values: 'mp3','ogg' (only!).
 
         >>> sound.retrieve_preview("/tmp")
         """
+        preview_type = 'preview_' + quality + '_' + file_format
+        preview_attr = getattr(self.previews, preview_type)
         try:
-            path = Path(directory,
-                        name if name else self.previews.preview_lq_mp3.split("/")[-1],
-                        )
+            if name:
+                if name.split('.')[-1] != file_format:
+                    file_name = name + '.' + file_format
+                else:
+                    file_name = name
+            else:
+                file_name = preview_attr.split("/")[-1]
+            path = Path(directory, file_name)
         except AttributeError as exc:
             raise FreesoundException(
                 '-',
@@ -373,7 +391,7 @@ class Sound(FreesoundObject):
                 ' https://www.freesound.org/docs/api/resources_apiv2.html#response-sound-list.'  # noqa
             ) from exc
         return FSRequest.retrieve(
-            self.previews.preview_lq_mp3,
+            preview_attr,
             self.client,
             path
         )
