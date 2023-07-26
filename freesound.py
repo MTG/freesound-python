@@ -49,7 +49,7 @@ class URIS:
     USER_PACKS = "/users/<username>/packs/"
     USER_BOOKMARK_CATEGORIES = "/users/<username>/bookmark_categories/"
     USER_BOOKMARK_CATEGORY_SOUNDS = (
-        "/users/<username>/bookmark_categories/<category_id>/sounds/"  # noqa
+        "/users/<username>/bookmark_categories/<category_id>/sounds/"    # noqa
     )
     PACK = "/packs/<pack_id>/"
     PACK_SOUNDS = "/packs/<pack_id>/sounds/"
@@ -85,7 +85,7 @@ class FreesoundClient:
     """
 
     def __init__(self):
-        self.auth = None  # should be set later
+        self.auth = None    # should be set later
         self.session = Session()
 
     def get_sound(self, sound_id, **params):
@@ -370,7 +370,7 @@ class Sound(FreesoundObject):
                 "-",
                 "Preview uris are not present in your sound object. Please add"
                 " them using the fields parameter in your request. See "
-                " https://www.freesound.org/docs/api/resources_apiv2.html#response-sound-list.",  # noqa
+                " https://www.freesound.org/docs/api/resources_apiv2.html#response-sound-list.",    # noqa
             ) from exc
         return FSRequest.retrieve(self.previews.preview_lq_mp3, self.client, path)
 
@@ -405,9 +405,7 @@ class Sound(FreesoundObject):
         >>> pitch_by_frames = analysis_frames_object.as_dict()['lowlevel']['pich'] # <-- Is possible to convert it to a Dictionary
         """
         uri = self.analysis_frames
-        return FSRequest.request(
-            uri, params=None, client=self.client, wrapper=FreesoundObject
-        )
+        return FSRequest.request(uri, params=None, client=self.client, wrapper=FreesoundObject)
 
     def get_similar(self, **params):
         """

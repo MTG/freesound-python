@@ -12,9 +12,7 @@ SIZE = 4
 
 def record_audio():
     p = pyaudio.PyAudio()
-    stream = p.open(
-        format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK
-    )
+    stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)
 
     print("* recording (3 seconds)")
     frames = []

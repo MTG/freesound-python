@@ -34,9 +34,7 @@ sound = freesound_client.get_sound(
 print("Getting sound:", sound.name)
 print("Username:", sound.username)
 print("Duration:", str(sound.duration), "(s)")
-print(
-    "Spectral centroid:",
-)
+print("Spectral centroid:",)
 print(sound.analysis.lowlevel.spectral_centroid.as_dict())
 print()
 
@@ -54,9 +52,7 @@ print()
 # Get sound analysis example specifying some request parameters
 print("Get analysis with specific normalized descriptor:")
 print("-------------")
-analysis = sound.get_analysis(
-    descriptors="lowlevel.spectral_centroid.mean", normalized=1
-)
+analysis = sound.get_analysis(descriptors="lowlevel.spectral_centroid.mean", normalized=1)
 spectral_centroid_mean = analysis.lowlevel.spectral_centroid.mean
 print("Normalized mean of spectral centroid:", spectral_centroid_mean)
 print()
@@ -128,7 +124,6 @@ results_pager = results_pager.next_page()
 for sound in results_pager:
     print("\t-", sound.name, "by", sound.username)
 print()
-
 
 # Getting sounds from a user example specifying some request parameters
 print("User sounds specifying some request parameters:")
