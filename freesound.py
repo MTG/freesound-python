@@ -48,7 +48,7 @@ class URIS:
     USER_SOUNDS = '/users/<username>/sounds/'
     USER_PACKS = '/users/<username>/packs/'
     USER_BOOKMARK_CATEGORIES = '/users/<username>/bookmark_categories/'
-    USER_BOOKMARK_CATEGORY_SOUNDS = '/users/<username>/bookmark_categories/<category_id>/sounds/'  # noqa
+    USER_BOOKMARK_CATEGORY_SOUNDS = '/users/<username>/bookmark_categories/<category_id>/sounds/'    # noqa
     PACK = '/packs/<pack_id>/'
     PACK_SOUNDS = '/packs/<pack_id>/sounds/'
     PACK_DOWNLOAD = '/packs/<pack_id>/download/'
@@ -83,7 +83,7 @@ class FreesoundClient:
     """
 
     def __init__(self):
-        self.auth = None  # should be set later
+        self.auth = None    # should be set later
         self.session = Session()
 
     def get_sound(self, sound_id, **params):
@@ -235,11 +235,11 @@ class FSRequest:
 
     @staticmethod
     def request(
-            uri,
-            params,
-            client,
-            wrapper=FreesoundObject,
-            method='GET',
+        uri,
+        params,
+        client,
+        wrapper=FreesoundObject,
+        method='GET',
     ):
         req = Request(method, uri, params=params, auth=client.auth)
         prepared = client.session.prepare_request(req)
@@ -326,9 +326,7 @@ class CombinedSearchPager(FreesoundObject):
         """
         Get more results
         """
-        return FSRequest.request(
-            self.more, {}, self.client, CombinedSearchPager
-        )
+        return FSRequest.request(self.more, {}, self.client, CombinedSearchPager)
 
 
 class Sound(FreesoundObject):
@@ -388,13 +386,9 @@ class Sound(FreesoundObject):
                 '-',
                 'Preview uris are not present in your sound object. Please add'
                 ' them using the fields parameter in your request. See '
-                ' https://www.freesound.org/docs/api/resources_apiv2.html#response-sound-list.'  # noqa
+                ' https://www.freesound.org/docs/api/resources_apiv2.html#response-sound-list.'    # noqa
             ) from exc
-        return FSRequest.retrieve(
-            preview_attr,
-            self.client,
-            path
-        )
+        return FSRequest.retrieve(preview_attr, self.client, path)
 
     def get_analysis(self, descriptors=None, normalized=0):
         """
@@ -504,9 +498,7 @@ class User(FreesoundObject):
 
         >>> p = u.get_bookmark_category_sounds(0)
         """
-        uri = URIS.uri(
-            URIS.USER_BOOKMARK_CATEGORY_SOUNDS, self.username, category_id
-        )
+        uri = URIS.uri(URIS.USER_BOOKMARK_CATEGORY_SOUNDS, self.username, category_id)
         return FSRequest.request(uri, params, self.client, Pager)
 
     def __repr__(self):
