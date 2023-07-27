@@ -26,10 +26,7 @@ print()
 print("Sound info specifying some request parameters:")
 print("-----------")
 sound = freesound_client.get_sound(
-    96541,
-    fields="id,name,username,duration,analysis",
-    descriptors="lowlevel.spectral_centroid",
-    normalized=1
+    96541, fields="id,name,username,duration,analysis", descriptors="lowlevel.spectral_centroid", normalized=1
 )
 print("Getting sound:", sound.name)
 print("Username:", sound.username)
@@ -52,10 +49,7 @@ print()
 # Get sound analysis example specifying some request parameters
 print("Get analysis with specific normalized descriptor:")
 print("-------------")
-analysis = sound.get_analysis(
-    descriptors="lowlevel.spectral_centroid.mean",
-    normalized=1
-)
+analysis = sound.get_analysis(descriptors="lowlevel.spectral_centroid.mean", normalized=1)
 spectral_centroid_mean = analysis.lowlevel.spectral_centroid.mean
 print("Normalized mean of spectral centroid:", spectral_centroid_mean)
 print()
@@ -72,9 +66,7 @@ print()
 print("Similar sounds specifying some request parameters:")
 print("---------------")
 results_pager = sound.get_similar(
-    page_size=10,
-    fields="name,username",
-    descriptors_filter="lowlevel.pitch.mean:[110 TO 180]"
+    page_size=10, fields="name,username", descriptors_filter="lowlevel.pitch.mean:[110 TO 180]"
 )
 for similar_sound in results_pager:
     print("\t-", similar_sound.name, "by", similar_sound.username)
@@ -128,29 +120,44 @@ for sound in results_pager:
     print("\t-", sound.name, "by", sound.username)
 print()
 
-
 # Getting sounds from a user example specifying some request parameters
 print("User sounds specifying some request parameters:")
 print("-----------")
 user = freesound_client.get_user("Headphaze")
 print("User name:", user.username)
 results_pager = user.get_sounds(
-    page_size=10,
-    fields="name,username,samplerate,duration,analysis",
-    descriptors="rhythm.bpm"
+    page_size=10, fields="name,username,samplerate,duration,analysis", descriptors="rhythm.bpm"
 )
 
 print("Num results:", results_pager.count)
 print("\t----- PAGE 1 -----")
 for sound in results_pager:
-    print("\t-", sound.name, "by", sound.username,)
-    print(", with sample rate of", sound.samplerate, "Hz and duration of",)
+    print(
+        "\t-",
+        sound.name,
+        "by",
+        sound.username,
+    )
+    print(
+        ", with sample rate of",
+        sound.samplerate,
+        "Hz and duration of",
+    )
     print(sound.duration, "s")
 print("\t----- PAGE 2 -----")
 results_pager = results_pager.next_page()
 for sound in results_pager:
-    print("\t-", sound.name, "by", sound.username,)
-    print(", with sample rate of", sound.samplerate, "Hz and duration of",)
+    print(
+        "\t-",
+        sound.name,
+        "by",
+        sound.username,
+    )
+    print(
+        ", with sample rate of",
+        sound.samplerate,
+        "Hz and duration of",
+    )
     print(sound.duration, "s")
 print()
 
@@ -160,21 +167,37 @@ print("-----------")
 pack = freesound_client.get_pack(3524)
 print("Pack name:", pack.name)
 results_pager = pack.get_sounds(
-    page_size=5,
-    fields="id,name,username,duration,analysis",
-    descriptors="lowlevel.spectral_flatness_db"
+    page_size=5, fields="id,name,username,duration,analysis", descriptors="lowlevel.spectral_flatness_db"
 )
 print("Num results:", results_pager.count)
 print("\t----- PAGE 1 -----")
 for sound in results_pager:
-    print("\t-", sound.name, "by", sound.username, ", with duration of",)
-    print(sound.duration, "s and a mean spectral flatness of",)
+    print(
+        "\t-",
+        sound.name,
+        "by",
+        sound.username,
+        ", with duration of",
+    )
+    print(
+        sound.duration,
+        "s and a mean spectral flatness of",
+    )
     print(sound.analysis.lowlevel.spectral_flatness_db.mean)
 print("\t----- PAGE 2 -----")
 results_pager = results_pager.next_page()
 for sound in results_pager:
-    print("\t-", sound.name, "by", sound.username, ", with duration of",)
-    print(sound.duration, "s and a mean spectral flatness of",)
+    print(
+        "\t-",
+        sound.name,
+        "by",
+        sound.username,
+        ", with duration of",
+    )
+    print(
+        sound.duration,
+        "s and a mean spectral flatness of",
+    )
     print(sound.analysis.lowlevel.spectral_flatness_db.mean)
 print()
 
@@ -187,6 +210,11 @@ results_pager = user.get_bookmark_categories(page_size=10)
 print("Num results:", results_pager.count)
 print("\t----- PAGE 1 -----")
 for bookmark_category in results_pager:
-    print("\t-", bookmark_category.name, "with", bookmark_category.num_sounds,)
+    print(
+        "\t-",
+        bookmark_category.name,
+        "with",
+        bookmark_category.num_sounds,
+    )
     print("sounds at", bookmark_category.url)
 print()

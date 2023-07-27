@@ -33,11 +33,7 @@ for bookmark in bookmarks_results_pager:
     print("\tCategory:", bookmark.name)
     print("\tNum sounds:", bookmark.num_sounds)
 
-    sounds_results_pager = user.get_bookmark_category_sounds(
-        bookmark.id,
-        fields="id,name,type",
-        page_size=1
-    )
+    sounds_results_pager = user.get_bookmark_category_sounds(bookmark.id, fields="id,name,type", page_size=1)
 
     while True:
         for sound in sounds_results_pager:
