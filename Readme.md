@@ -29,16 +29,23 @@ for sound in results:
 ```
 
 ## Installation
-1) clone or download
 
-2) run:
+The easiest way to install is using pip:
+
 ```
-python setup.py install
+pip install freesound
 ```
 
-Alternatively you should also be able to install directly from GitHub with:
+Alternatively, you can install directly from GitHub:
+
 ```
 pip install git+https://github.com/MTG/freesound-python
+```
+
+Or clone the repository and install manually:
+
+```
+python -m pip install .
 ```
 
 ## Advanced usage
