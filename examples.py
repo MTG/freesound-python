@@ -200,21 +200,3 @@ for sound in results_pager:
     )
     print(sound.analysis.lowlevel.spectral_flatness_db.mean)
 print()
-
-# Getting bookmark categories from a user example
-print("User bookmark categories:")
-print("-----------")
-user = freesound_client.get_user("frederic.font")
-print("User name:", user.username)
-results_pager = user.get_bookmark_categories(page_size=10)
-print("Num results:", results_pager.count)
-print("\t----- PAGE 1 -----")
-for bookmark_category in results_pager:
-    print(
-        "\t-",
-        bookmark_category.name,
-        "with",
-        bookmark_category.num_sounds,
-    )
-    print("sounds at", bookmark_category.url)
-print()
