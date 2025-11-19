@@ -26,9 +26,7 @@ CONTENT_CHUNK_SIZE = 10 * 1024
 class URIS:
     HOST = 'freesound.org'
     BASE = 'https://' + HOST + '/apiv2'
-    TEXT_SEARCH = '/search/text/'
-    CONTENT_SEARCH = '/search/content/'
-    COMBINED_SEARCH = '/search/combined/'
+    SEARCH = '/search/'
     SOUND = '/sounds/<sound_id>/'
     SOUND_ANALYSIS = '/sounds/<sound_id>/analysis/'
     SIMILAR_SOUNDS = '/sounds/<sound_id>/similar/'
@@ -89,7 +87,7 @@ class FreesoundClient:
     def get_sound(self, sound_id, **params):
         """
         Get a sound object by id
-        Relevant params: descriptors, fields, normalized
+        Relevant params: fields
         https://freesound.org/docs/api/resources_apiv2.html#sound-resources
 
         >>> sound = c.get_sound(6)
@@ -97,14 +95,14 @@ class FreesoundClient:
         uri = URIS.uri(URIS.SOUND, sound_id)
         return FSRequest.request(uri, params, self, Sound)
 
-    def text_search(self, **params):
+    def search(self, **params):
         """
         Search sounds using a text query and/or filter. Returns an iterable
         Pager object. The fields parameter allows you to specify the
         information you want in the results list
         https://freesound.org/docs/api/resources_apiv2.html#text-search
 
-        >>> sounds = c.text_search(
+        >>> sounds = c.search(
         >>>     query="dubstep", filter="tag:loop", fields="id,name,url"
         >>> )
         >>> for snd in sounds: print snd.name
@@ -117,49 +115,22 @@ class FreesoundClient:
             # the Sound objects resulting from a search query.
             params['fields'] = 'id,name,tags,username,license,previews'
 
-        uri = URIS.uri(URIS.TEXT_SEARCH)
+        if 'similar_to' in params:
+            # If similar_to parameter is specified and it is specified as
+            # a vector, then change it to a list and limit float precssion
+            # to avoid too long URL
+            if isinstance(params['similar_to'], (list, tuple)):
+                vector = params['similar_to']
+                vector_str = ','.join(['{0:.5f}'.format(v) for v in vector])
+                params['similar_to'] = '[' + vector_str + ']'
+            
+        uri = URIS.uri(URIS.SEARCH)
         return FSRequest.request(uri, params, self, Pager)
-
-    def content_based_search(self, **params):
-        """
-        Search sounds using a content-based descriptor target and/or filter
-        See essentia_example.py for an example using essentia
-        https://freesound.org/docs/api/resources_apiv2.html#content-search
-
-        >>> sounds = c.content_based_search(
-        >>>     target="lowlevel.pitch.mean:220",
-        >>>     descriptors_filter="lowlevel.pitch_instantaneous_confidence.mean:[0.8 TO 1]",  # noqa
-        >>>     fields="id,name,url")
-        >>> for snd in sounds: print snd.name
-        """
-        if 'fields' not in params:
-            # See comment in text_search method above
-            params['fields'] = 'id,name,tags,username,license,previews'
-
-        uri = URIS.uri(URIS.CONTENT_SEARCH)
-        return FSRequest.request(uri, params, self, Pager)
-
-    def combined_search(self, **params):
-        """
-        Combine both text and content-based queries.
-        https://freesound.org/docs/api/resources_apiv2.html#combined-search
-
-        >>> sounds = c.combined_search(
-        >>>     target="lowlevel.pitch.mean:220",
-        >>>     filter="single-note"
-        >>> )
-        """
-        if 'fields' not in params:
-            # See comment in text_search method above
-            params['fields'] = 'id,name,tags,username,license,previews'
-
-        uri = URIS.uri(URIS.COMBINED_SEARCH)
-        return FSRequest.request(uri, params, self, CombinedSearchPager)
 
     def get_user(self, username):
         """
         Get a user object by username
-        https://freesound.org/docs/api/resources_apiv2.html#combined-search
+        https://freesound.org/docs/api/resources_apiv2.html#user-instance
 
         >>> u = c.get_user("xserra")
         """
@@ -169,7 +140,7 @@ class FreesoundClient:
     def get_pack(self, pack_id):
         """
         Get a user object by username
-        https://freesound.org/docs/api/resources_apiv2.html#combined-search
+        https://freesound.org/docs/api/resources_apiv2.html#pack-instance
 
         >>> p = c.get_pack(3416)
         """
@@ -191,7 +162,7 @@ class FreesoundClient:
     def get_my_bookmark_category_sounds(self, category_id, **params):
         """
         Get sounds in a bookmark category for the authenticated user.
-        Relevant params: page, page_size, fields, descriptors, normalized
+        Relevant params: page, page_size, fields
         https://freesound.org/docs/api/resources_apiv2.html#my-bookmark-category-sounds
         Requires OAuth2 authentication.
 
@@ -204,7 +175,6 @@ class FreesoundClient:
         """
         Set your API key or Oauth2 token
         https://freesound.org/docs/api/authentication.html
-        https://freesound.org/docs/api/resources_apiv2.html#combined-search
 
         >>> c.set_token("<your_api_key>")
         """
@@ -334,25 +304,6 @@ class GenericPager(Pager):
         return FreesoundObject(self.results[key], self.client)
 
 
-class CombinedSearchPager(FreesoundObject):
-    """
-    Combined search uses a different pagination style.
-    The total amount of results is not available, and the size of the page is
-    not guaranteed.
-    Use :py:meth:`~freesound.CombinedSearchPager.more` to get more results if
-    available.
-    """
-
-    def __getitem__(self, key):
-        return Sound(self.results[key], self.client)
-
-    def more(self):
-        """
-        Get more results
-        """
-        return FSRequest.request(self.more, {}, self.client, CombinedSearchPager)
-
-
 class Sound(FreesoundObject):
     """
     Freesound Sound resources
@@ -414,24 +365,18 @@ class Sound(FreesoundObject):
             ) from exc
         return FSRequest.retrieve(preview_attr, self.client, path)
 
-    def get_analysis(self, descriptors=None, normalized=0):
+    def get_analysis(self, fields=None):
         """
         Get content-based descriptors.
-        Returns the statistical aggregation as a Sound object.
         https://freesound.org/docs/api/resources_apiv2.html#sound-analysis
 
         Example:
-        >>> analysis_object = sound.get_analysis(descriptors="lowlevel.pitch.mean")
-        >>> mffc_mean = analysis_object.lowlevel.mfcc.mean # <-- access analysis results by using object properties
-        >>> mffc_mean = analysis_object.as_dict()['lowlevel']['mfcc']['mean'] # <-- Is possible to convert it to a Dictionary
+        >>> analysis_object = sound.get_analysis()
+        >>> mffc_mean = analysis_object.mfcc # <-- access analysis results by using object properties
+        >>> mffc_mean = analysis_object.as_dict()['mfcc'] # <-- Is possible to convert it to a Dictionary
         """
         uri = URIS.uri(URIS.SOUND_ANALYSIS, self.id)
-        params = {}
-        if descriptors:
-            params['descriptors'] = descriptors
-        if normalized:
-            params['normalized'] = normalized
-        return FSRequest.request(uri, params, self.client, FreesoundObject)
+        return FSRequest.request(uri, {}, self.client, FreesoundObject)
 
     def get_analysis_frames(self):
         """
@@ -449,9 +394,8 @@ class Sound(FreesoundObject):
 
     def get_similar(self, **params):
         """
-        Get similar sounds based on content-based descriptors.
-        Relevant params: page, page_size, fields, descriptors, normalized,
-        descriptors_filter
+        Get similar sounds based on similarity spaces.
+        Relevant params: page, page_size, fields, similarity_space
         https://freesound.org/docs/api/resources_apiv2.html#similar-sounds
 
         >>> s = sound.get_similar()
@@ -484,7 +428,7 @@ class User(FreesoundObject):
     def get_sounds(self, **params):
         """
         Get user sounds.
-        Relevant params: page, page_size, fields, descriptors, normalized
+        Relevant params: page, page_size, fields
         https://freesound.org/docs/api/resources_apiv2.html#user-sounds
 
         >>> u.get_sounds()
@@ -517,7 +461,7 @@ class Pack(FreesoundObject):
     def get_sounds(self, **params):
         """
         Get pack sounds
-        Relevant params: page, page_size, fields, descriptors, normalized
+        Relevant params: page, page_size, fields
         https://freesound.org/docs/api/resources_apiv2.html#pack-sounds
 
         >>> sounds = p.get_sounds()
