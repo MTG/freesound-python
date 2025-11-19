@@ -44,11 +44,11 @@ class URIS:
     LOGOUT = '/api-auth/logout/'
     LOGOUT_AUTHORIZE = '/oauth2/logout_and_authorize/'
     ME = '/me/'
+    ME_BOOKMARK_CATEGORIES = '/me/bookmark_categories/'
+    ME_BOOKMARK_CATEGORY_SOUNDS = '/me/bookmark_categories/<category_id>/sounds/'
     USER = '/users/<username>/'
     USER_SOUNDS = '/users/<username>/sounds/'
     USER_PACKS = '/users/<username>/packs/'
-    USER_BOOKMARK_CATEGORIES = '/users/<username>/bookmark_categories/'
-    USER_BOOKMARK_CATEGORY_SOUNDS = '/users/<username>/bookmark_categories/<category_id>/sounds/'    # noqa
     PACK = '/packs/<pack_id>/'
     PACK_SOUNDS = '/packs/<pack_id>/sounds/'
     PACK_DOWNLOAD = '/packs/<pack_id>/download/'
@@ -175,6 +175,30 @@ class FreesoundClient:
         """
         uri = URIS.uri(URIS.PACK, pack_id)
         return FSRequest.request(uri, {}, self, Pack)
+
+    def get_my_bookmark_categories(self, **params):
+        """
+        Get bookmark categories for the authenticated user.
+        Relevant params: page, page_size
+        https://freesound.org/docs/api/resources_apiv2.html#my-bookmark-categories
+        Requires OAuth2 authentication.
+
+        >>> c.get_my_bookmark_categories()
+        """
+        uri = URIS.uri(URIS.ME_BOOKMARK_CATEGORIES)
+        return FSRequest.request(uri, params, self, GenericPager)
+
+    def get_my_bookmark_category_sounds(self, category_id, **params):
+        """
+        Get sounds in a bookmark category for the authenticated user.
+        Relevant params: page, page_size, fields, descriptors, normalized
+        https://freesound.org/docs/api/resources_apiv2.html#my-bookmark-category-sounds
+        Requires OAuth2 authentication.
+
+        >>> c.get_my_bookmark_category_sounds(0)
+        """
+        uri = URIS.uri(URIS.ME_BOOKMARK_CATEGORY_SOUNDS, category_id)
+        return FSRequest.request(uri, params, self, Pager)
 
     def set_token(self, token, auth_type="token"):
         """
@@ -478,28 +502,6 @@ class User(FreesoundObject):
         """
         uri = URIS.uri(URIS.USER_PACKS, self.username)
         return FSRequest.request(uri, params, self.client, GenericPager)
-
-    def get_bookmark_categories(self, **params):
-        """
-        Get user bookmark categories.
-        Relevant params: page, page_size
-        https://freesound.org/docs/api/resources_apiv2.html#user-bookmark-categories
-
-        >>> u.get_bookmark_categories()
-        """
-        uri = URIS.uri(URIS.USER_BOOKMARK_CATEGORIES, self.username)
-        return FSRequest.request(uri, params, self.client, GenericPager)
-
-    def get_bookmark_category_sounds(self, category_id, **params):
-        """
-        Get user bookmarks.
-        Relevant params: page, page_size, fields, descriptors, normalized
-        https://freesound.org/docs/api/resources_apiv2.html#user-bookmark-category-sounds
-
-        >>> p = u.get_bookmark_category_sounds(0)
-        """
-        uri = URIS.uri(URIS.USER_BOOKMARK_CATEGORY_SOUNDS, self.username, category_id)
-        return FSRequest.request(uri, params, self.client, Pager)
 
     def __repr__(self):
         return '<User: "%s">' % self.username

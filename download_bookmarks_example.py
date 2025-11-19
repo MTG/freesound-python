@@ -18,29 +18,25 @@ freesound_client = freesound.FreesoundClient()
 freesound_client.set_token(access_token, "oauth")
 
 path_name = os.path.join(os.getcwd(), "tmp")
-try:
-    os.mkdir(path_name)
-except:
-    pass
+os.makedirs(path_name, exist_ok=True)
 
-user = freesound_client.get_user("apitest")
-print("Username:", user.username)
-
-bookmarks_results_pager = user.get_bookmark_categories(page_size=100)
+bookmarks_results_pager = freesound_client.get_my_bookmark_categories(page_size=100)
 print("Num categories:", bookmarks_results_pager.count)
 
 for bookmark in bookmarks_results_pager:
     print("\tCategory:", bookmark.name)
     print("\tNum sounds:", bookmark.num_sounds)
 
-    sounds_results_pager = user.get_bookmark_category_sounds(bookmark.id, fields="id,name,type", page_size=1)
+    sounds_results_pager = freesound_client.get_my_bookmark_category_sounds(
+        bookmark.id, fields="id,name,type", page_size=1
+    )
 
     while True:
         for sound in sounds_results_pager:
             print("\t\tDownloading:", sound.name)
 
             # Some sound filenames already end with the type...
-            if sound.name.endswith(sound.type):
+            if sound.name.lower().endswith(sound.type.lower()):
                 filename = sound.name
             else:
                 filename = f"{sound.name}.{sound.type}"
