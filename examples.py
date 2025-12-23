@@ -105,6 +105,17 @@ for similar_sound in results_pager:
     print("\t-", similar_sound.name, "by", similar_sound.username)
 print()
 
+# Search sounds and sort them by distance to a given audio descriptors target
+print("Sort sounds by distance to audio descriptors target:")
+print("---------------")
+results_pager = freesound_client.search(
+    filter="pitch_var:[* TO 20]",
+    sort='pitch_salience:1.0,pitch:440'
+)
+
+for sound in results_pager:
+    print("\t-", sound.name, "by", sound.username, "distance:", sound.distance_to_target)
+print()
 
 # Getting sounds from a user example
 print("User sounds:")
