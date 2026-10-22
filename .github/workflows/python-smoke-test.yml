@@ -10,13 +10,15 @@ permissions:
   contents: read
 
 jobs:
-  build:
-
+  # Live smoke test against the Freesound API on every supported Python version.
+  # The API is rate limited (60 requests/minute, 2000/day per key, see
+  # https://freesound.org/docs/api/) and one run of examples.py makes ~20 requests,
+  # so the runs are serialized and spaced out.
+  smoke-test:
     runs-on: ubuntu-latest
-    
+
     strategy:
       max-parallel: 1
-      fail-fast: true
       matrix:
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
 
@@ -28,6 +30,12 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: uv sync
+    - name: Check the package imports and builds
+      run: |
+        uv run python -c "import freesound"
+        uv build
+    - name: Wait to stay under the API rate limit
+      run: sleep 30
     - name: Run smoke test
       env:
         FREESOUND_API_KEY: ${{ secrets.FREESOUND_API_KEY }}
