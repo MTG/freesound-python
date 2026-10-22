@@ -1,3 +1,45 @@
+[project]
+name = "freesound"
+version = "1.1"
+description = "A Python client for the Freesound APIv2"
+readme = "Readme.md"
+requires-python = ">=3.9"
+license = "MIT"
+license-files = ["COPYING.txt"]
+dependencies = [
+    "requests>=2.27,<3.0",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Multimedia :: Sound/Audio",
+]
+
+[project.urls]
+Homepage = "https://github.com/MTG/freesound-python"
+Repository = "https://github.com/MTG/freesound-python.git"
+Issues = "https://github.com/MTG/freesound-python/issues"
+Documentation = "https://freesound.org/docs/api/"
+
+[dependency-groups]
+dev = [
+    "yapf",
+]
+
+[build-system]
+requires = ["hatchling >= 1.27"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+include = ["freesound.py"]
+
 [tool.yapf]
 based_on_style = "google"
 spaces_before_comment = 4
