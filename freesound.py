@@ -123,7 +123,7 @@ class FreesoundClient:
                 vector = params['similar_to']
                 vector_str = ','.join(['{0:.5f}'.format(v) for v in vector])
                 params['similar_to'] = '[' + vector_str + ']'
-            
+
         uri = URIS.uri(URIS.SEARCH)
         return FSRequest.request(uri, params, self, Pager)
 
