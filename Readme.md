@@ -20,7 +20,7 @@ import freesound
 client = freesound.FreesoundClient()
 client.set_token("<your_api_key>","token")
 
-results = client.text_search(query="dubstep",fields="id,name,previews")
+results = client.search(query="dubstep",fields="id,name,previews")
 
 for sound in results:
     sound.retrieve_preview(".",sound.name+".mp3")
